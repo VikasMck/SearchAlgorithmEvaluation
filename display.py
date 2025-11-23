@@ -1,0 +1,150 @@
+import numpy as np
+import pandas as pd
+import json
+import time
+import matplotlib.pyplot as plt
+import matplotlib
+import tracemalloc
+from algorithms import SearchPlanner
+
+# Simplest way to run on Macs
+matplotlib.use('MacOSX')
+
+show_animation = True
+pause_time = 0.2
+
+
+def load_parameters(config_file='./MapConfig/config9x9.json'):
+    with open(config_file) as config_env:
+        parameters = json.load(config_env)
+    return parameters
+
+
+def load_map_layout(map_xlsx):
+    gmap = pd.read_excel(map_xlsx, header=None)
+    data = gmap.to_numpy()
+    data = data[::-1]
+    return data
+
+
+def get_cell_type(data):
+    obstacle_x, obstacle_y, empty_x, empty_y = [], [], [], []
+    for index_y in range(data.shape[0]):
+        for index_x in range(data.shape[1]):
+            if data[index_y, index_x] == 1:
+                obstacle_x.append(index_x)
+                obstacle_y.append(index_y)
+            else:
+                empty_x.append(index_x)
+                empty_y.append(index_y)
+    return obstacle_x, obstacle_y, empty_x, empty_y
+
+
+def create_obstacle_map(data):
+    return [[bool(data[index_x][index_y]) for index_y in range(data.shape[0])]
+            for index_x in range(data.shape[1])]
+
+
+# General class for animating, need to add on to it as currently only shows the final path.
+class AnimatedSearch:
+    def __init__(self, obstacle_map, start, goal, algorithm_planner, algorithm, search_type, fig_dim):
+        self.obstacle_map = obstacle_map
+        self.start = start
+        self.goal = goal
+        self.algorithm = algorithm
+        self.search_type = search_type
+        self.algorithm_planner = algorithm_planner
+        self.fig, self.ax = plt.subplots(figsize=(fig_dim, fig_dim))
+        self.width, self.height = len(obstacle_map), len(obstacle_map[0])
+        self.setup_plot()
+
+    def setup_plot(self):
+        self.ax.set_xlim(-1, self.width)
+        self.ax.set_ylim(-1, self.height)
+        self.ax.grid(True)
+        self.ax.set_aspect('equal')
+
+        grid = np.array(self.obstacle_map)
+
+        empty_y, empty_x = np.where(~grid)
+        self.ax.scatter(empty_x, empty_y, s=300, c='blue',
+                        marker='s', edgecolors='black')
+
+        obstacle_y, obstacle_x = np.where(grid)
+        self.ax.scatter(obstacle_x, obstacle_y, s=300, c='gray',
+                        marker='s')
+
+        self.ax.scatter(self.start[0], self.start[1], s=400,
+                        c='red', marker='s', edgecolors='black', label='Start')
+        self.ax.scatter(self.goal[0], self.goal[1], s=400,
+                        c='green', marker='s', edgecolors='black', label='Goal')
+
+        # possibly add this as global const, will see later
+        algorithm_titles = {'1': 'BFS', '2': 'DFS', '3': 'UCS', '4': 'A*'}
+        self.ax.set_title(f"{algorithm_titles.get(self.algorithm, 'Search')} - {self.search_type.title()} Search")
+
+    def search_with_animation(self):
+        algorithm_map = {'1': self.algorithm_planner.planning_bfs, '2': self.algorithm_planner.planning_dfs,
+                         '3': self.algorithm_planner.planning_ucs, '4': self.algorithm_planner.planning_astar}
+
+        chosen_algorithm = algorithm_map.get(self.algorithm)
+
+        # a way to track performance, need to add onto it later
+        tracemalloc.start()
+
+        path, _ = chosen_algorithm(self.start[0], self.start[1],
+                                   self.goal[0], self.goal[1],
+                                   search_type=self.search_type)
+
+        # saves current and peak
+        memory = tracemalloc.get_traced_memory()
+        tracemalloc.stop()
+
+        print(f"Peak memory usage: {memory}")
+
+        location_x = [coord[0] for coord in path]
+        location_y = [coord[1] for coord in path]
+
+        if len(location_x) >= 2:
+            for i in range(len(location_x) - 1):
+                path_x = (location_x[i], location_x[i + 1])
+                path_y = (location_y[i], location_y[i + 1])
+                plt.plot(path_x, path_y, "-y", linewidth=4)
+                plt.pause(pause_time)
+
+        return path, None
+
+
+def display_maze(search_algorithm, search_type):
+    try:
+        parameters = load_parameters()
+        data = load_map_layout(parameters['map_xlsx'])
+        obstacle_map = create_obstacle_map(data)
+        # changed the config file to have better variables
+        start = (int(parameters['start_x']), int(parameters['start_y']))
+        goal = (int(parameters['goal_x']), int(parameters['goal_y']))
+        # main function for deciding the algorithm
+        algorithm_planner = SearchPlanner(parameters.get('grid_size', 1.0), obstacle_map, motion_model='8n')
+        fig_dim = parameters['fig_dim']
+
+        animated = AnimatedSearch(obstacle_map, start, goal, algorithm_planner, search_algorithm,
+                                  {'1': 'tree', '2': 'graph'}.get(search_type),
+                                  fig_dim)
+
+        # another measure to count performance
+        start_time = time.time()
+        path, _ = animated.search_with_animation()
+        elapsed_time = time.time() - start_time
+
+        if path:
+            print(f"Path length: {len(path)} steps")
+            print(f"Total cost: {sum([1 for _ in path])}")
+            print(f"Time: {elapsed_time}s")
+        else:
+            print("Unable to find a path")
+
+        plt.legend()
+        plt.show()
+
+    except Exception as e:
+        print(f"Error: {e}")

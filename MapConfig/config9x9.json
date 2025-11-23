@@ -1,0 +1,11 @@
+{
+    "start_x": 1.0,
+    "start_y": 1.0,
+    "goal_x": 7.0,
+    "goal_y": 7.0,
+    "grid_size": 1.0,  
+    "robot_radius": 1.0,  
+    "fig_dim": 10,
+    "map_xlsx": "./MapConfig/map9x9.xlsx"
+}
+
