@@ -73,7 +73,49 @@ class SearchPlanner:
 
     # to add later
     def planning_dfs(self, start_x, start_y, goal_x, goal_y, search_type='graph'):
-        return None
+        start_node = self.Node(start_x, start_y, 0.0, -1)
+        goal_node = self.Node(goal_x, goal_y, 0.0, -1)
+
+        #Stack FIFO
+        queue = deque([start_node])
+
+        visited_nodes = {}
+        closed_set = set() if search_type == 'graph' else None
+
+        while queue:
+            current = queue.pop()
+            # calculates the currents node index to make comparison/searching etc easier aka V in psuedo code
+            current_id = self.calculate_grid_index(current)
+            visited_nodes[current_id] = current
+
+            #If Goal, Then returns the path from the state to the goal
+            if (current.x, current.y) == (goal_node.x, goal_node.y):
+                route_x, route_y = self.calculate_final_path(current, visited_nodes)
+                path = [(route_x[i], route_y[i]) for i in range(len(route_x))]
+                return path, route_y
+
+            #Loops Over All The possible neighbour nodes based on the predefined motion (e.g 4 or 8 neighnours)
+            # Adds the neighbouring nodes to the openset
+            for change_x, change_y, cost in self.motion:
+                #Gets the neighbours x,y
+                next_x, next_y = current.x + change_x, current.y + change_y
+
+                # boundaries + obstacles checking
+                if self.min_x <= next_x <= self.max_x and self.min_y <= next_y <= self.max_y:
+                    if not self.obstacle_map[next_x][next_y]:
+                        # Creates A Node for the neigbour if its not an obstical
+                        neighbour = self.Node(next_x, next_y, current.cost + cost, current_id)
+                        # Generates it index so it can be easily searched an identified if it is already in the closed set
+                        neighbour_id = self.calculate_grid_index(neighbour)
+
+                        # tree needs fixing, either it gets stuck on infinite loop and return None, or other issues
+                        if search_type == 'tree':
+                            if neighbour_id != current.parent_index:
+                                queue.append(neighbour)
+                        else:
+                            if neighbour_id not in closed_set:
+                                queue.append(neighbour)
+        return None, None
 
     def planning_ucs(self, start_x, start_y, goal_x, goal_y, search_type='graph'):
         return None
