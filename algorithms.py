@@ -61,7 +61,7 @@ class SearchPlanner:
 
                 # boundaries + obstacles checking
                 if self.min_x <= next_x <= self.max_x and self.min_y <= next_y <= self.max_y:
-                    if not self.obstacle_map[next_x][next_y]:
+                    if not self.obstacle_map[next_y][next_x]:
                         neighbour = self.Node(next_x, next_y, current.cost + cost, current_id)
                         neighbour_id = self.calculate_grid_index(neighbour)
 
@@ -110,7 +110,7 @@ class SearchPlanner:
 
                 # boundaries + obstacles checking
                 if self.min_x <= next_x <= self.max_x and self.min_y <= next_y <= self.max_y:
-                    if not self.obstacle_map[next_x][next_y]:
+                    if not self.obstacle_map[next_y][next_x]:
                         # Creates A Node for the neigbour if its not an obstical
                         neighbour = self.Node(next_x, next_y, current.cost + cost, current_id)
                         # Generates it index so it can be easily searched an identified if it is already in the closed set
@@ -162,7 +162,7 @@ class SearchPlanner:
                 if not (self.min_x <= next_x <= self.max_x and self.min_y <= next_y <= self.max_y):
                     continue
 
-                if self.obstacle_map[next_x][next_y]:
+                if self.obstacle_map[next_y][next_x]:
                     continue
 
                 child = self.Node(next_x, next_y, parent.cost + cost, parent_id)
@@ -235,7 +235,7 @@ class SearchPlanner:
                 if not (0 <= next_x < self.x_width and 0 <= next_y < self.y_width):
                     continue
 
-                if self.obstacle_map[next_x][next_y]:
+                if self.obstacle_map[next_y][next_x]:
                     continue
 
                 if neighbour_id not in open_set:
