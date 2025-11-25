@@ -92,9 +92,14 @@ class AnimatedSearch:
         # a way to track performance, need to add onto it later
         tracemalloc.start()
 
-        path, _ = chosen_algorithm(self.start[0], self.start[1],
-                                   self.goal[0], self.goal[1],
-                                   search_type=self.search_type)
+        path = chosen_algorithm(self.start[0], self.start[1],
+                                self.goal[0], self.goal[1],
+                                search_type=self.search_type)
+
+        # fault check
+        if path is None:
+            print("No path found!")
+            return None
 
         # saves current and peak
         memory = tracemalloc.get_traced_memory()
@@ -124,7 +129,7 @@ def display_maze(search_algorithm, search_type):
         start = (int(parameters['start_x']), int(parameters['start_y']))
         goal = (int(parameters['goal_x']), int(parameters['goal_y']))
         # main function for deciding the algorithm
-        algorithm_planner = SearchPlanner(parameters.get('grid_size', 1.0), obstacle_map, motion_model='8n')
+        algorithm_planner = SearchPlanner(parameters.get('grid_size', 1.0), obstacle_map, motion_model='4n')
         fig_dim = parameters['fig_dim']
 
         animated = AnimatedSearch(obstacle_map, start, goal, algorithm_planner, search_algorithm,
