@@ -1,6 +1,5 @@
 import math
 from collections import deque
-import heapq
 
 
 # making a general class for all algorithms, similar to lab notes
@@ -49,8 +48,8 @@ class SearchPlanner:
             if (current.x, current.y) == (goal_node.x, goal_node.y):
                 route_x, route_y = self.calculate_final_path(current, visited_nodes)
                 path = [(route_x[i], route_y[i]) for i in range(len(route_x))]
-                return path, route_y
-            #Checks If the current id has already been searched
+                return path
+
             if search_type == 'graph':
                 if current_id in closed_set:
                     continue
@@ -80,13 +79,11 @@ class SearchPlanner:
         start_node = self.Node(start_x, start_y, 0.0, -1)
         goal_node = self.Node(goal_x, goal_y, 0.0, -1)
 
-        #Stack LIFO
+        # Stack LIFO
         queue = deque([start_node])
 
         visited_nodes = {}
         closed_set = set() if search_type == 'graph' else None
-
-
 
         while queue:
             current = queue.pop()
@@ -98,7 +95,7 @@ class SearchPlanner:
             if (current.x, current.y) == (goal_node.x, goal_node.y):
                 route_x, route_y = self.calculate_final_path(current, visited_nodes)
                 path = [(route_x[i], route_y[i]) for i in range(len(route_x))]
-                return path, route_y
+                return path
 
             if search_type == 'graph':
                 if current_id in closed_set:
@@ -126,7 +123,7 @@ class SearchPlanner:
                         else:
                             if neighbour_id not in closed_set:
                                 queue.append(neighbour)
-        return None, None
+        return None
 
     def planning_ucs(self, start_x, start_y, goal_x, goal_y, search_type='graph'):
         start_node = self.Node(start_x, start_y, 0.0, -1)
@@ -187,10 +184,73 @@ class SearchPlanner:
         return None, None
 
     def planning_astar(self, start_x, start_y, goal_x, goal_y, heuristic_type='euclidean', search_type='graph'):
-        return None
+        start_node = self.Node(start_x, start_y, 0.0, -1)
+        goal_node = self.Node(goal_x, goal_y, 0.0, -1)
+
+        # set with nodes left to expand, and noted already expanded
+        open_set, closed_set = dict(), dict()
+        # for the tree v graph thing (maybe need to remove)
+        visited_nodes = dict()
+        open_set[self.calculate_grid_index(start_node)] = start_node
+
+        while True:
+            if len(open_set) == 0:
+                print("Open set is empty..")
+                return None
+
+            # finding the lowest cost
+            current_id = min(open_set, key=lambda o: open_set[o].cost + self.calculate_heuristic(open_set[o], goal_node, heuristic_type))
+
+            current = open_set[current_id]
+
+            if (current.x, current.y) == (goal_node.x, goal_node.y):
+                goal_node.parent_index = current.parent_index
+                goal_node.cost = current.cost
+                break
+
+            visited_nodes[current_id] = current
+
+            # dealing with nodes lists, removing from open and adding to closed +
+            del open_set[current_id]
+
+            if search_type == 'graph':
+                closed_set[current_id] = current
+
+            for change_x, change_y, cost in self.motion:
+                next_x = current.x + change_x
+                next_y = current.y + change_y
+                new_cost = current.cost + cost
+
+                neighbour = self.Node(next_x, next_y, new_cost, current_id)
+                neighbour_id = self.calculate_grid_index(neighbour)
+
+                if search_type == 'graph' and neighbour_id in closed_set:
+                    continue
+
+                # need to double-check this later, without this "tree" does not work,
+                # but then it feels like less than tree search
+                if search_type == 'tree' and neighbour_id in visited_nodes:
+                    continue
+
+                if not (0 <= next_x < self.x_width and 0 <= next_y < self.y_width):
+                    continue
+
+                if self.obstacle_map[next_x][next_y]:
+                    continue
+
+                if neighbour_id not in open_set:
+                    open_set[neighbour_id] = neighbour
+                else:
+                    if open_set[neighbour_id].cost > neighbour.cost:
+                        open_set[neighbour_id] = neighbour
+
+        route_x, route_y = self.calculate_final_path(goal_node, visited_nodes)
+        path = [(route_x[i], route_y[i]) for i in range(len(route_x))]
+
+        return path
 
     # will be used later, similar to lab files
-    def _calc_heuristic(self, current_node, goal_node, heuristic_type='euclidean'):
+    def calculate_heuristic(self, current_node, goal_node, heuristic_type='euclidean'):
         if heuristic_type == 'manhattan':
             return self.calculate_heuristic_manhattan(current_node, goal_node)
         elif heuristic_type == 'euclidean':
