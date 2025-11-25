@@ -1,5 +1,6 @@
 import math
 from collections import deque
+import heapq
 
 
 # making a general class for all algorithms, similar to lab notes
@@ -25,6 +26,9 @@ class SearchPlanner:
         def __str__(self):
             return f"{self.x},{self.y},{self.cost},{self.parent_index}"
 
+        def __eq__(self, other):
+            return self.x == other.x and self.y == other.y
+
     # plannings
     def planning_bfs(self, start_x, start_y, goal_x, goal_y, search_type='graph'):
         start_node = self.Node(start_x, start_y, 0.0, -1)
@@ -46,6 +50,11 @@ class SearchPlanner:
                 route_x, route_y = self.calculate_final_path(current, visited_nodes)
                 path = [(route_x[i], route_y[i]) for i in range(len(route_x))]
                 return path, route_y
+            #Checks If the current id has already been searched
+            if search_type == 'graph':
+                if current_id in closed_set:
+                    continue
+                closed_set.add(current_id)
 
             if search_type == 'graph':
                 if current_id in closed_set:
@@ -76,11 +85,13 @@ class SearchPlanner:
         start_node = self.Node(start_x, start_y, 0.0, -1)
         goal_node = self.Node(goal_x, goal_y, 0.0, -1)
 
-        #Stack FIFO
+        #Stack LIFO
         queue = deque([start_node])
 
         visited_nodes = {}
         closed_set = set() if search_type == 'graph' else None
+
+
 
         while queue:
             current = queue.pop()
@@ -123,7 +134,61 @@ class SearchPlanner:
         return None, None
 
     def planning_ucs(self, start_x, start_y, goal_x, goal_y, search_type='graph'):
-        return None
+        start_node = self.Node(start_x, start_y, 0.0, -1)
+        goal_node = self.Node(goal_x, goal_y, 0.0, -1)
+
+        # Priority Queue
+        p_queue = []
+        heapq.heappush(p_queue, (start_node.cost,self.calculate_grid_index(start_node) ,start_node))
+
+        visited_nodes = {}
+        closed_set = set() if search_type == 'graph' else None
+
+        while p_queue:
+            _ ,current_id, current = heapq.heappop(p_queue)
+            visited_nodes[current_id] = current
+
+            # If Goal, Then returns the path from the state to the goal
+            if (current.x, current.y) == (goal_node.x, goal_node.y):
+                route_x, route_y = self.calculate_final_path(current, visited_nodes)
+                path = [(route_x[i], route_y[i]) for i in range(len(route_x))]
+                return path, route_y
+
+            if search_type == 'graph':
+                if current_id in closed_set:
+                    continue
+                closed_set.add(current_id)
+
+            for change_x, change_y, cost in self.motion:
+                #Gets the neighbours x,y
+                next_x, next_y = current.x + change_x, current.y + change_y
+
+                # boundaries + obstacles checking
+                if self.min_x <= next_x <= self.max_x and self.min_y <= next_y <= self.max_y:
+                    if not self.obstacle_map[next_x][next_y]:
+                        # Creates A Node for the neigbour if its not an obstical
+                        neighbour = self.Node(next_x, next_y, current.cost + cost, current_id)
+                        # Generates it index so it can be easily searched an identified if it is already in the closed set
+                        neighbour_id = self.calculate_grid_index(neighbour)
+
+                        # if its in the open and the cost is more than the  next neighbour it skips to the next iteration/neighbour
+                        for node in p_queue:
+                            if neighbour_id == node[1] and node[2].cost < neighbour.cost:
+                                continue
+
+
+                        # tree needs fixing, either it gets stuck on infinite loop and return None, or other issues
+                        if search_type == 'tree':
+                            if neighbour_id != current.parent_index:
+                                heapq.heappush(p_queue, (neighbour.cost,self.calculate_grid_index(neighbour), neighbour))
+                        else:
+                            if neighbour_id not in closed_set:
+                                heapq.heappush(p_queue,(neighbour.cost, self.calculate_grid_index(neighbour), neighbour))
+
+
+
+
+        return None, None
 
     def planning_astar(self, start_x, start_y, goal_x, goal_y, heuristic_type='euclidean', search_type='graph'):
         return None
