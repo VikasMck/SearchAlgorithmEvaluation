@@ -56,11 +56,6 @@ class SearchPlanner:
                     continue
                 closed_set.add(current_id)
 
-            if search_type == 'graph':
-                if current_id in closed_set:
-                    continue
-                closed_set.add(current_id)
-
             # cost can be used later for better comparison
             for change_x, change_y, cost in self.motion:
                 next_x, next_y = current.x + change_x, current.y + change_y
@@ -137,53 +132,54 @@ class SearchPlanner:
         start_node = self.Node(start_x, start_y, 0.0, -1)
         goal_node = self.Node(goal_x, goal_y, 0.0, -1)
 
-        # Priority Queue
-        p_queue = []
-        heapq.heappush(p_queue, (start_node.cost,self.calculate_grid_index(start_node) ,start_node))
+        open_set, closed_set = dict(), dict()
+        open_set[self.calculate_grid_index(start_node)] = start_node
 
-        visited_nodes = {}
-        closed_set = set() if search_type == 'graph' else None
+        visited_nodes = dict()
 
-        while p_queue:
-            _ ,current_id, current = heapq.heappop(p_queue)
-            visited_nodes[current_id] = current
+        closedSets = \
+            {
+                'graph': closed_set,
+                'tree': visited_nodes,
+            }
 
-            # If Goal, Then returns the path from the state to the goal
-            if (current.x, current.y) == (goal_node.x, goal_node.y):
-                route_x, route_y = self.calculate_final_path(current, visited_nodes)
+
+        while len(open_set) > 0:
+            parent_id = min(open_set, key=lambda o: open_set[o].cost)
+            parent = open_set[parent_id]
+
+            if parent == goal_node:
+                route_x, route_y = self.calculate_final_path(parent, visited_nodes)
                 path = [(route_x[i], route_y[i]) for i in range(len(route_x))]
                 return path, route_y
 
-            if search_type == 'graph':
-                if current_id in closed_set:
-                    continue
-                closed_set.add(current_id)
+            del open_set[parent_id]
+
+            visited_nodes[parent_id] = parent
+
+            closed_set[parent_id] = parent
 
             for change_x, change_y, cost in self.motion:
-                #Gets the neighbours x,y
-                next_x, next_y = current.x + change_x, current.y + change_y
+                next_x, next_y = parent.x + change_x, parent.y + change_y
 
-                # boundaries + obstacles checking
-                if self.min_x <= next_x <= self.max_x and self.min_y <= next_y <= self.max_y:
-                    if not self.obstacle_map[next_x][next_y]:
-                        # Creates A Node for the neigbour if its not an obstical
-                        neighbour = self.Node(next_x, next_y, current.cost + cost, current_id)
-                        # Generates it index so it can be easily searched an identified if it is already in the closed set
-                        neighbour_id = self.calculate_grid_index(neighbour)
+                if not (self.min_x <= next_x <= self.max_x and self.min_y <= next_y <= self.max_y):
+                    continue
 
-                        # if its in the open and the cost is more than the  next neighbour it skips to the next iteration/neighbour
-                        for node in p_queue:
-                            if neighbour_id == node[1] and node[2].cost < neighbour.cost:
-                                continue
+                if self.obstacle_map[next_x][next_y]:
+                    continue
 
+                child = self.Node(next_x, next_y, parent.cost + cost, parent_id)
+                child_id = self.calculate_grid_index(child)
 
-                        # tree needs fixing, either it gets stuck on infinite loop and return None, or other issues
-                        if search_type == 'tree':
-                            if neighbour_id != current.parent_index:
-                                heapq.heappush(p_queue, (neighbour.cost,self.calculate_grid_index(neighbour), neighbour))
-                        else:
-                            if neighbour_id not in closed_set:
-                                heapq.heappush(p_queue,(neighbour.cost, self.calculate_grid_index(neighbour), neighbour))
+                if child_id in closedSets[search_type]:
+                    continue
+
+                if child_id not in open_set:
+                    open_set[child_id] = child
+                    continue
+
+                if child.cost < open_set[child_id].cost:
+                    open_set[child_id] = child
 
 
 
