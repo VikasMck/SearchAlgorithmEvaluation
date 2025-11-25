@@ -88,13 +88,18 @@ class SearchPlanner:
             current_id = self.calculate_grid_index(current)
             visited_nodes[current_id] = current
 
-            #If Goal, Then returns the path from the state to the goal
+            # If Goal, Then returns the path from the state to the goal
             if (current.x, current.y) == (goal_node.x, goal_node.y):
                 route_x, route_y = self.calculate_final_path(current, visited_nodes)
                 path = [(route_x[i], route_y[i]) for i in range(len(route_x))]
                 return path, route_y
 
-            #Loops Over All The possible neighbour nodes based on the predefined motion (e.g 4 or 8 neighnours)
+            if search_type == 'graph':
+                if current_id in closed_set:
+                    continue
+                closed_set.add(current_id)
+
+            # Loops Over All The possible neighbour nodes based on the predefined motion (e.g 4 or 8 neighnours)
             # Adds the neighbouring nodes to the openset
             for change_x, change_y, cost in self.motion:
                 #Gets the neighbours x,y
