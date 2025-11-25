@@ -25,6 +25,9 @@ class SearchPlanner:
         def __str__(self):
             return f"{self.x},{self.y},{self.cost},{self.parent_index}"
 
+        def __eq__(self, other):
+            return self.x == other.x and self.y == other.y
+
     # plannings
     def planning_bfs(self, start_x, start_y, goal_x, goal_y, search_type='graph'):
         start_node = self.Node(start_x, start_y, 0.0, -1)
@@ -64,18 +67,19 @@ class SearchPlanner:
 
                         # tree needs fixing, either it gets stuck on infinite loop and return None, or other issues
                         if search_type == 'tree':
-                            queue.append(neighbour)
+                            if neighbour_id != current.parent_index:
+                                queue.append(neighbour)
                         else:
                             if neighbour_id not in closed_set:
                                 queue.append(neighbour)
-        return None
+        return None, None
 
     # to add later
     def planning_dfs(self, start_x, start_y, goal_x, goal_y, search_type='graph'):
         start_node = self.Node(start_x, start_y, 0.0, -1)
         goal_node = self.Node(goal_x, goal_y, 0.0, -1)
 
-        # Stack FIFO
+        # Stack LIFO
         queue = deque([start_node])
 
         visited_nodes = {}
@@ -122,6 +126,61 @@ class SearchPlanner:
         return None
 
     def planning_ucs(self, start_x, start_y, goal_x, goal_y, search_type='graph'):
+        start_node = self.Node(start_x, start_y, 0.0, -1)
+        goal_node = self.Node(goal_x, goal_y, 0.0, -1)
+
+        open_set, closed_set = dict(), dict()
+        open_set[self.calculate_grid_index(start_node)] = start_node
+
+        visited_nodes = dict()
+
+        closedSets = \
+            {
+                'graph': closed_set,
+                'tree': visited_nodes,
+            }
+
+
+        while len(open_set) > 0:
+            parent_id = min(open_set, key=lambda o: open_set[o].cost)
+            parent = open_set[parent_id]
+
+            if parent == goal_node:
+                route_x, route_y = self.calculate_final_path(parent, visited_nodes)
+                path = [(route_x[i], route_y[i]) for i in range(len(route_x))]
+                return path
+
+            del open_set[parent_id]
+
+            visited_nodes[parent_id] = parent
+
+            closed_set[parent_id] = parent
+
+            for change_x, change_y, cost in self.motion:
+                next_x, next_y = parent.x + change_x, parent.y + change_y
+
+                if not (self.min_x <= next_x <= self.max_x and self.min_y <= next_y <= self.max_y):
+                    continue
+
+                if self.obstacle_map[next_x][next_y]:
+                    continue
+
+                child = self.Node(next_x, next_y, parent.cost + cost, parent_id)
+                child_id = self.calculate_grid_index(child)
+
+                if child_id in closedSets[search_type]:
+                    continue
+
+                if child_id not in open_set:
+                    open_set[child_id] = child
+                    continue
+
+                if child.cost < open_set[child_id].cost:
+                    open_set[child_id] = child
+
+
+
+
         return None
 
     def planning_astar(self, start_x, start_y, goal_x, goal_y, heuristic_type='euclidean', search_type='graph'):
