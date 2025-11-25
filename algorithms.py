@@ -148,7 +148,7 @@ class SearchPlanner:
             if parent == goal_node:
                 route_x, route_y = self.calculate_final_path(parent, visited_nodes)
                 path = [(route_x[i], route_y[i]) for i in range(len(route_x))]
-                return path, route_y
+                return path
 
             del open_set[parent_id]
 
@@ -181,7 +181,7 @@ class SearchPlanner:
 
 
 
-        return None, None
+        return None
 
     def planning_astar(self, start_x, start_y, goal_x, goal_y, heuristic_type='euclidean', search_type='graph'):
         start_node = self.Node(start_x, start_y, 0.0, -1)
