@@ -72,7 +72,7 @@ class SearchPlanner:
                         else:
                             if neighbour_id not in closed_set:
                                 queue.append(neighbour)
-        return None, None
+        return None
 
     # to add later
     def planning_dfs(self, start_x, start_y, goal_x, goal_y, search_type='graph'):
@@ -105,7 +105,7 @@ class SearchPlanner:
             # Loops Over All The possible neighbour nodes based on the predefined motion (e.g 4 or 8 neighnours)
             # Adds the neighbouring nodes to the openset
             for change_x, change_y, cost in self.motion:
-                #Gets the neighbours x,y
+                # Gets the neighbours x,y
                 next_x, next_y = current.x + change_x, current.y + change_y
 
                 # boundaries + obstacles checking
@@ -113,7 +113,9 @@ class SearchPlanner:
                     if not self.obstacle_map[next_y][next_x]:
                         # Creates A Node for the neigbour if its not an obstical
                         neighbour = self.Node(next_x, next_y, current.cost + cost, current_id)
-                        # Generates it index so it can be easily searched an identified if it is already in the closed set
+
+                        # Generates it index so it can be easily searched
+                        # and identified if it is already in the closed set
                         neighbour_id = self.calculate_grid_index(neighbour)
 
                         # tree needs fixing, either it gets stuck on infinite loop and return None, or other issues
@@ -134,12 +136,11 @@ class SearchPlanner:
 
         visited_nodes = dict()
 
-        closedSets = \
+        closed_sets = \
             {
                 'graph': closed_set,
                 'tree': visited_nodes,
             }
-
 
         while len(open_set) > 0:
             parent_id = min(open_set, key=lambda o: open_set[o].cost)
@@ -168,7 +169,7 @@ class SearchPlanner:
                 child = self.Node(next_x, next_y, parent.cost + cost, parent_id)
                 child_id = self.calculate_grid_index(child)
 
-                if child_id in closedSets[search_type]:
+                if child_id in closed_sets[search_type]:
                     continue
 
                 if child_id not in open_set:
@@ -177,9 +178,6 @@ class SearchPlanner:
 
                 if child.cost < open_set[child_id].cost:
                     open_set[child_id] = child
-
-
-
 
         return None
 
