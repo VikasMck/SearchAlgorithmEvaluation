@@ -5,6 +5,7 @@ import time
 import matplotlib.pyplot as plt
 import matplotlib
 import tracemalloc
+import seaborn as sns
 from algorithms import SearchPlanner
 
 # Simplest way to run on Macs
@@ -47,16 +48,19 @@ def create_obstacle_map(data):
 
 # General class for animating, need to add on to it as currently only shows the final path.
 class AnimatedSearch:
-    def __init__(self, obstacle_map, start, goal, algorithm_planner, algorithm, search_type, fig_dim):
+    def __init__(self, obstacle_map, start, goal, algorithm_planner, algorithm, search_type, fig_dim, show_animation = True):
         self.obstacle_map = obstacle_map
         self.start = start
         self.goal = goal
         self.algorithm = algorithm
         self.search_type = search_type
         self.algorithm_planner = algorithm_planner
-        self.fig, self.ax = plt.subplots(figsize=(fig_dim, fig_dim))
+
         self.width, self.height = len(obstacle_map), len(obstacle_map[0])
-        self.setup_plot()
+        self.show_animation = show_animation
+        if show_animation:
+            self.setup_plot()
+            self.fig, self.ax = plt.subplots(figsize=(fig_dim, fig_dim))
 
     def setup_plot(self):
         self.ax.set_xlim(-1, self.width)
@@ -105,6 +109,10 @@ class AnimatedSearch:
         memory = tracemalloc.get_traced_memory()
         tracemalloc.stop()
 
+
+        if not self.show_animation:
+            return path, memory
+
         print(f"Peak memory usage: {memory}")
 
         location_x = [coord[0] for coord in path]
@@ -117,9 +125,11 @@ class AnimatedSearch:
                 plt.plot(path_x, path_y, "-y", linewidth=4)
                 plt.pause(pause_time)
 
-        return path
+        return path, memory
 
-def run_search(search_algorithm, search_type):
+
+
+def run_search(search_algorithm, search_type, show_animation = True):
     parameters = load_parameters()
     data = load_map_layout(parameters['map_xlsx'])
     obstacle_map = create_obstacle_map(data)
@@ -129,18 +139,23 @@ def run_search(search_algorithm, search_type):
     # main function for deciding the algorithm
     algorithm_planner = SearchPlanner(parameters.get('grid_size', 1.0), obstacle_map, motion_model='4n')
     fig_dim = parameters['fig_dim']
+
+
     animated = AnimatedSearch(obstacle_map, start, goal, algorithm_planner, search_algorithm,
-                              {'1': 'tree', '2': 'graph'}.get(search_type),
-                              fig_dim)
+                                  {'1': 'tree', '2': 'graph'}.get(search_type),
+                                  fig_dim, show_animation=show_animation)
+
+
     # another measure to count performance
     start_time = time.time()
-    path = animated.search_with_animation()
+    path, memory = animated.search_with_animation()
     elapsed_time = time.time() - start_time
-    return elapsed_time, path
+
+    return elapsed_time, path, memory
 
 def display_maze(search_algorithm, search_type, displayPlot = True):
     try:
-        elapsed_time, path = run_search(search_algorithm, search_type)
+        elapsed_time, path, memory = run_search(search_algorithm, search_type)
 
         if path:
             print(f"Path length: {len(path)} steps")
@@ -161,30 +176,29 @@ def get_cost(path):
     return sum([1 for _ in path])
 
 
-def results_iterator (iterations = 5, search_type = '2'):
-
-    algorithms_types = ('1', '2', '3', '4')
+def results_iterator (iterations = 1, search_type = '2', algorithms_types = ('1', '2', '3', '4')):
     search_results = dict()
-
     try:
-
         for algorithm in algorithms_types:
-
             temp = list()
-
             for iteration in range(iterations):
-                elapsed_time, path = run_search(algorithm, search_type)
-                temp.append((elapsed_time, path))
+                elapsed_time, path, memory = run_search(algorithm, search_type, False)
+                temp.append((elapsed_time, path, memory))
 
             search_results[algorithm] = temp
-
-
 
     except Exception as e:
         print(f"Error: {e}")
 
-
     return search_results
+
+def graph_results():
+    search_results = results_iterator()
+
+    # _ = sns.lineplot(data=search_results, marker='o')
+
+    print(search_results)
+    print(search_results[0].elapsed_time)
 
 
 
