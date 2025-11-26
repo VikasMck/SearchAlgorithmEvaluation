@@ -117,10 +117,10 @@ class AnimatedSearch:
                 plt.plot(path_x, path_y, "-y", linewidth=4)
                 plt.pause(pause_time)
 
-        return path, None
+        return path
 
 
-def display_maze(search_algorithm, search_type):
+def display_maze(search_algorithm, search_type, displayPlot = True):
     try:
         parameters = load_parameters()
         data = load_map_layout(parameters['map_xlsx'])
@@ -138,7 +138,7 @@ def display_maze(search_algorithm, search_type):
 
         # another measure to count performance
         start_time = time.time()
-        path, _ = animated.search_with_animation()
+        path = animated.search_with_animation()
         elapsed_time = time.time() - start_time
 
         if path:
@@ -148,8 +148,19 @@ def display_maze(search_algorithm, search_type):
         else:
             print("Unable to find a path")
 
-        plt.legend()
-        plt.show()
+        if displayPlot:
+            plt.legend()
+            plt.show()
 
     except Exception as e:
         print(f"Error: {e}")
+
+
+# def display_graph_analysis(search_algorithm, search_type):
+
+
+
+
+
+
+
