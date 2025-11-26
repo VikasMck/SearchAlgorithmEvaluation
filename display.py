@@ -14,6 +14,9 @@ matplotlib.use('MacOSX')
 show_animation = True
 pause_time = 0.2
 
+algorithm_titles = {'1': 'BFS', '2': 'DFS', '3': 'UCS', '4': 'A*'}
+search_type_titles = {'1': 'tree', '2': 'graph'}
+
 
 def load_parameters(config_file='./MapConfig/config9x9.json'):
     with open(config_file) as config_env:
@@ -196,8 +199,15 @@ def graph_results():
     search_results = results_iterator()
 
     #Convert Search Results into a df so its easier for seaborn to work with
-    temp = ()
+    temp = list()
+    for search_algoirthm, items in search_results.items():
+        attempt = 0
+        for time, path, memory in items:
+            attempt += 1
+            temp.append((algorithm_titles[search_algoirthm],attempt,time, len(path), memory))
 
+    results_df = pd.DataFrame(temp, columns=['Algorithm', 'Iteration', 'Time', 'Path', 'Memory'])
+    print(results_df)
 
 
 
