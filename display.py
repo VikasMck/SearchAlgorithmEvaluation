@@ -119,31 +119,32 @@ class AnimatedSearch:
 
         return path
 
+def run_search(search_algorithm, search_type):
+    parameters = load_parameters()
+    data = load_map_layout(parameters['map_xlsx'])
+    obstacle_map = create_obstacle_map(data)
+    # changed the config file to have better variables
+    start = (int(parameters['start_x']), int(parameters['start_y']))
+    goal = (int(parameters['goal_x']), int(parameters['goal_y']))
+    # main function for deciding the algorithm
+    algorithm_planner = SearchPlanner(parameters.get('grid_size', 1.0), obstacle_map, motion_model='4n')
+    fig_dim = parameters['fig_dim']
+    animated = AnimatedSearch(obstacle_map, start, goal, algorithm_planner, search_algorithm,
+                              {'1': 'tree', '2': 'graph'}.get(search_type),
+                              fig_dim)
+    # another measure to count performance
+    start_time = time.time()
+    path = animated.search_with_animation()
+    elapsed_time = time.time() - start_time
+    return elapsed_time, path
 
 def display_maze(search_algorithm, search_type, displayPlot = True):
     try:
-        parameters = load_parameters()
-        data = load_map_layout(parameters['map_xlsx'])
-        obstacle_map = create_obstacle_map(data)
-        # changed the config file to have better variables
-        start = (int(parameters['start_x']), int(parameters['start_y']))
-        goal = (int(parameters['goal_x']), int(parameters['goal_y']))
-        # main function for deciding the algorithm
-        algorithm_planner = SearchPlanner(parameters.get('grid_size', 1.0), obstacle_map, motion_model='4n')
-        fig_dim = parameters['fig_dim']
-
-        animated = AnimatedSearch(obstacle_map, start, goal, algorithm_planner, search_algorithm,
-                                  {'1': 'tree', '2': 'graph'}.get(search_type),
-                                  fig_dim)
-
-        # another measure to count performance
-        start_time = time.time()
-        path = animated.search_with_animation()
-        elapsed_time = time.time() - start_time
+        elapsed_time, path = run_search(search_algorithm, search_type)
 
         if path:
             print(f"Path length: {len(path)} steps")
-            print(f"Total cost: {sum([1 for _ in path])}")
+            print(f"Total cost: {get_cost(path)}")
             print(f"Time: {elapsed_time}s")
         else:
             print("Unable to find a path")
@@ -156,7 +157,39 @@ def display_maze(search_algorithm, search_type, displayPlot = True):
         print(f"Error: {e}")
 
 
-# def display_graph_analysis(search_algorithm, search_type):
+def get_cost(path):
+    return sum([1 for _ in path])
+
+
+def results_iterator (iterations = 5, search_type = '2'):
+
+    algorithms_types = ('1', '2', '3', '4')
+    search_results = dict()
+
+    try:
+
+        for algorithm in algorithms_types:
+
+            temp = list()
+
+            for iteration in range(iterations):
+                elapsed_time, path = run_search(algorithm, search_type)
+                temp.append((elapsed_time, path))
+
+            search_results[algorithm] = temp
+
+
+
+    except Exception as e:
+        print(f"Error: {e}")
+
+
+    return search_results
+
+
+
+
+
 
 
 
