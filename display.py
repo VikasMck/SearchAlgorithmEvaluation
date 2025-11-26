@@ -59,8 +59,8 @@ class AnimatedSearch:
         self.width, self.height = len(obstacle_map), len(obstacle_map[0])
         self.show_animation = show_animation
         if show_animation:
-            self.setup_plot()
             self.fig, self.ax = plt.subplots(figsize=(fig_dim, fig_dim))
+            self.setup_plot()
 
     def setup_plot(self):
         self.ax.set_xlim(-1, self.width)
@@ -195,10 +195,9 @@ def results_iterator (iterations = 1, search_type = '2', algorithms_types = ('1'
 def graph_results():
     search_results = results_iterator()
 
-    # _ = sns.lineplot(data=search_results, marker='o')
+    #Convert Search Results into a df so its easier for seaborn to work with
+    temp = ()
 
-    print(search_results)
-    print(search_results[0].elapsed_time)
 
 
 
