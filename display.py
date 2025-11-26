@@ -58,9 +58,9 @@ class AnimatedSearch:
         self.algorithm = algorithm
         self.search_type = search_type
         self.algorithm_planner = algorithm_planner
-
         self.width, self.height = len(obstacle_map), len(obstacle_map[0])
         self.show_animation = show_animation
+
         if show_animation:
             self.fig, self.ax = plt.subplots(figsize=(fig_dim, fig_dim))
             self.setup_plot()
@@ -143,11 +143,9 @@ def run_search(search_algorithm, search_type, show_animation = True):
     algorithm_planner = SearchPlanner(parameters.get('grid_size', 1.0), obstacle_map, motion_model='4n')
     fig_dim = parameters['fig_dim']
 
-
     animated = AnimatedSearch(obstacle_map, start, goal, algorithm_planner, search_algorithm,
                                   {'1': 'tree', '2': 'graph'}.get(search_type),
                                   fig_dim, show_animation=show_animation)
-
 
     # another measure to count performance
     start_time = time.time()
@@ -179,16 +177,18 @@ def get_cost(path):
     return sum([1 for _ in path])
 
 
-def results_iterator (iterations = 1, search_type = '2', algorithms_types = ('1', '2', '3', '4')):
-    search_results = dict()
+def results_iterator (iterations = 1, search_types = ('2'), algorithms_types = ('1', '2', '3', '4')):
+    search_results = list()
     try:
         for algorithm in algorithms_types:
-            temp = list()
-            for iteration in range(iterations):
-                elapsed_time, path, memory = run_search(algorithm, search_type, False)
-                temp.append((elapsed_time, path, memory))
+            for search in search_types:
+                attempt = 0
+                for iteration in range(iterations):
+                    attempt += 1
+                    elapsed_time, path, memory = run_search(algorithm, search, False)
+                    # text = f'{search_type_titles.get(search)}_{algorithm_titles.get(algorithm)}'
+                    search_results.append((algorithm,search,attempt,elapsed_time, len(path), memory[1]))
 
-            search_results[algorithm] = temp
 
     except Exception as e:
         print(f"Error: {e}")
@@ -196,19 +196,19 @@ def results_iterator (iterations = 1, search_type = '2', algorithms_types = ('1'
     return search_results
 
 def graph_results():
-    search_results = results_iterator()
+    search_results = results_iterator(iterations=3)
+    results_df = pd.DataFrame(search_results, columns=['Search_Algorithm','Search_Type','Attempts','Time', 'Path', 'Peak_Memory_Usage'])
+    results_df['Algorithm_Name'] = results_df["Search_Type"].map(search_type_titles) + '_'+ results_df["Search_Algorithm"].map(algorithm_titles)
 
-    #Convert Search Results into a df so its easier for seaborn to work with
-    temp = list()
-    for search_algoirthm, items in search_results.items():
-        attempt = 0
-        for time, path, memory in items:
-            attempt += 1
-            temp.append((algorithm_titles[search_algoirthm],attempt,time, len(path), memory))
+    # print(results_df['Algorithm_Name'])
+    # print(results_df.describe())
 
-    results_df = pd.DataFrame(temp, columns=['Algorithm', 'Iteration', 'Time', 'Path', 'Memory'])
-    print(results_df)
-
+    line = sns.lineplot(y = 'Peak_Memory_Usage', x = 'Attempts', data = results_df, hue = 'Algorithm_Name', marker = 'o')
+     # plt.ylim(results_df['Time'].min(), results_df['Time'].max())
+    plt.legend(title = 'Search Algorithms')
+    plt.title('Memory Usage Per Attempt Of Each Search Algorithm')
+    plt.ylabel("Peak Memory Usage (Bytes)")
+    plt.show()
 
 
 

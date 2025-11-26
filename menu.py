@@ -9,7 +9,7 @@ def print_main_menu():
 
     while True:
         user_input = input("Enter your user_input (1-5): ").strip()
-        if user_input in ('1', '2', '3', '4', '5'):
+        if user_input in ('1', '2', '3', '4', '5','6'):
             return user_input
         print("Please enter a number between 1 and 5.")
 

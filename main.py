@@ -1,5 +1,5 @@
 from menu import print_main_menu, print_tree_graph_menu
-from display import display_maze
+from display import display_maze, graph_results
 
 
 def main():
@@ -9,6 +9,9 @@ def main():
         if search_algorithm == '5':
             print("Exiting program.")
             break
+
+        if search_algorithm == '6':
+            graph_results()
 
         search_type = print_tree_graph_menu()
 
