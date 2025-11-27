@@ -197,18 +197,33 @@ def results_iterator (iterations = 1, search_types = ('2'), algorithms_types = (
 
 def graph_results():
     search_results = results_iterator(iterations=3)
+
     results_df = pd.DataFrame(search_results, columns=['Search_Algorithm','Search_Type','Attempts','Time', 'Path', 'Peak_Memory_Usage'])
-    results_df['Algorithm_Name'] = results_df["Search_Type"].map(search_type_titles) + '_'+ results_df["Search_Algorithm"].map(algorithm_titles)
+
+    results_df['Algorithm_And_Search_Name'] = results_df["Search_Type"].map(search_type_titles) + '_'+ results_df["Search_Algorithm"].map(algorithm_titles)
+    results_df['Search_Algorithm_Name'] = results_df["Search_Algorithm"].map(algorithm_titles)
+    results_df['Search_Type_Name'] = results_df["Search_Type"].map(search_type_titles)
 
     # print(results_df['Algorithm_Name'])
     # print(results_df.describe())
 
-    line = sns.lineplot(y = 'Peak_Memory_Usage', x = 'Attempts', data = results_df, hue = 'Algorithm_Name', marker = 'o')
+    line_memory = sns.lineplot(y = 'Peak_Memory_Usage', x = 'Attempts', data = results_df, hue = 'Algorithm_And_Search_Name', marker = 'o')
      # plt.ylim(results_df['Time'].min(), results_df['Time'].max())
     plt.legend(title = 'Search Algorithms')
     plt.title('Memory Usage Per Attempt Of Each Search Algorithm')
     plt.ylabel("Peak Memory Usage (Bytes)")
+    plt.xticks(results_df['Attempts'].unique())
     plt.show()
+
+    bat_path = sns.barplot(y='Path', x='Search_Algorithm_Name', data=results_df, hue='Search_Type_Name')
+    plt.legend(title = 'Search Types')
+    plt.title('Comparing Path Lengths Across Search Algorithms')
+    plt.ylabel("Path Length")
+    plt.xlabel("Search Algorithms")
+    plt.yticks(results_df['Path'].unique())
+    plt.show()
+
+
 
 
 
