@@ -5,6 +5,7 @@ import time
 import matplotlib.pyplot as plt
 import matplotlib
 import tracemalloc
+import seaborn as sns
 from algorithms import SearchPlanner
 
 # Simplest way to run on Macs
@@ -12,6 +13,9 @@ matplotlib.use('MacOSX')
 
 show_animation = True
 pause_time = 0.2
+
+algorithm_titles = {'1': 'BFS', '2': 'DFS', '3': 'UCS', '4': 'A*'}
+search_type_titles = {'1': 'tree', '2': 'graph'}
 
 
 def load_parameters(config_file='./MapConfig/config9x9.json'):
@@ -47,16 +51,19 @@ def create_obstacle_map(data):
 
 # General class for animating, need to add on to it as currently only shows the final path.
 class AnimatedSearch:
-    def __init__(self, obstacle_map, start, goal, algorithm_planner, algorithm, search_type, fig_dim):
+    def __init__(self, obstacle_map, start, goal, algorithm_planner, algorithm, search_type, fig_dim, show_animation = True):
         self.obstacle_map = obstacle_map
         self.start = start
         self.goal = goal
         self.algorithm = algorithm
         self.search_type = search_type
         self.algorithm_planner = algorithm_planner
-        self.fig, self.ax = plt.subplots(figsize=(fig_dim, fig_dim))
         self.width, self.height = len(obstacle_map), len(obstacle_map[0])
-        self.setup_plot()
+        self.show_animation = show_animation
+
+        if show_animation:
+            self.fig, self.ax = plt.subplots(figsize=(fig_dim, fig_dim))
+            self.setup_plot()
 
     def setup_plot(self):
         self.ax.set_xlim(-1, self.width)
@@ -105,6 +112,10 @@ class AnimatedSearch:
         memory = tracemalloc.get_traced_memory()
         tracemalloc.stop()
 
+
+        if not self.show_animation:
+            return path, memory
+
         print(f"Peak memory usage: {memory}")
 
         location_x = [coord[0] for coord in path]
@@ -117,39 +128,110 @@ class AnimatedSearch:
                 plt.plot(path_x, path_y, "-y", linewidth=4)
                 plt.pause(pause_time)
 
-        return path, None
+        return path, memory
 
 
-def display_maze(search_algorithm, search_type):
-    try:
-        parameters = load_parameters()
-        data = load_map_layout(parameters['map_xlsx'])
-        obstacle_map = create_obstacle_map(data)
-        # changed the config file to have better variables
-        start = (int(parameters['start_x']), int(parameters['start_y']))
-        goal = (int(parameters['goal_x']), int(parameters['goal_y']))
-        # main function for deciding the algorithm
-        algorithm_planner = SearchPlanner(parameters.get('grid_size', 1.0), obstacle_map, motion_model='4n')
-        fig_dim = parameters['fig_dim']
 
-        animated = AnimatedSearch(obstacle_map, start, goal, algorithm_planner, search_algorithm,
+def run_search(search_algorithm, search_type, show_animation = True):
+    parameters = load_parameters()
+    data = load_map_layout(parameters['map_xlsx'])
+    obstacle_map = create_obstacle_map(data)
+    # changed the config file to have better variables
+    start = (int(parameters['start_x']), int(parameters['start_y']))
+    goal = (int(parameters['goal_x']), int(parameters['goal_y']))
+    # main function for deciding the algorithm
+    algorithm_planner = SearchPlanner(parameters.get('grid_size', 1.0), obstacle_map, motion_model='4n')
+    fig_dim = parameters['fig_dim']
+
+    animated = AnimatedSearch(obstacle_map, start, goal, algorithm_planner, search_algorithm,
                                   {'1': 'tree', '2': 'graph'}.get(search_type),
-                                  fig_dim)
+                                  fig_dim, show_animation=show_animation)
 
-        # another measure to count performance
-        start_time = time.time()
-        path, _ = animated.search_with_animation()
-        elapsed_time = time.time() - start_time
+    # another measure to count performance
+    start_time = time.time()
+    path, memory = animated.search_with_animation()
+    elapsed_time = time.time() - start_time
+
+    return elapsed_time, path, memory
+
+def display_maze(search_algorithm, search_type, displayPlot = True):
+    try:
+        elapsed_time, path, memory = run_search(search_algorithm, search_type)
 
         if path:
             print(f"Path length: {len(path)} steps")
-            print(f"Total cost: {sum([1 for _ in path])}")
+            print(f"Total cost: {get_cost(path)}")
             print(f"Time: {elapsed_time}s")
         else:
             print("Unable to find a path")
 
-        plt.legend()
-        plt.show()
+        if displayPlot:
+            plt.legend()
+            plt.show()
 
     except Exception as e:
         print(f"Error: {e}")
+
+
+def get_cost(path):
+    return sum([1 for _ in path])
+
+
+def results_iterator (iterations = 1, search_types = ('2'), algorithms_types = ('1', '2', '3', '4')):
+    search_results = list()
+    try:
+        for algorithm in algorithms_types:
+            for search in search_types:
+                attempt = 0
+                for iteration in range(iterations):
+                    attempt += 1
+                    elapsed_time, path, memory = run_search(algorithm, search, False)
+                    # text = f'{search_type_titles.get(search)}_{algorithm_titles.get(algorithm)}'
+                    search_results.append((algorithm,search,attempt,elapsed_time, len(path), memory[1]))
+
+
+    except Exception as e:
+        print(f"Error: {e}")
+
+    return search_results
+
+def graph_results():
+    search_results = results_iterator(iterations=3)
+
+    results_df = pd.DataFrame(search_results, columns=['Search_Algorithm','Search_Type','Attempts','Time', 'Path', 'Peak_Memory_Usage'])
+
+    results_df['Algorithm_And_Search_Name'] = results_df["Search_Type"].map(search_type_titles) + '_'+ results_df["Search_Algorithm"].map(algorithm_titles)
+    results_df['Search_Algorithm_Name'] = results_df["Search_Algorithm"].map(algorithm_titles)
+    results_df['Search_Type_Name'] = results_df["Search_Type"].map(search_type_titles)
+
+    # print(results_df['Algorithm_Name'])
+    # print(results_df.describe())
+
+    line_memory = sns.lineplot(y = 'Peak_Memory_Usage', x = 'Attempts', data = results_df, hue = 'Algorithm_And_Search_Name', marker = 'o')
+     # plt.ylim(results_df['Time'].min(), results_df['Time'].max())
+    plt.legend(title = 'Search Algorithms')
+    plt.title('Memory Usage Per Attempt Of Each Search Algorithm')
+    plt.ylabel("Peak Memory Usage (Bytes)")
+    plt.xticks(results_df['Attempts'].unique())
+    plt.show()
+
+    bat_path = sns.barplot(y='Path', x='Search_Algorithm_Name', data=results_df, hue='Search_Type_Name')
+    plt.legend(title = 'Search Types')
+    plt.title('Comparing Path Lengths Across Search Algorithms')
+    plt.ylabel("Path Length")
+    plt.xlabel("Search Algorithms")
+    plt.yticks(results_df['Path'].unique())
+    plt.show()
+
+
+
+
+
+
+
+
+
+
+
+
+
