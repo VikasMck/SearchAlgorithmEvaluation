@@ -8,6 +8,8 @@ import tracemalloc
 import seaborn as sns
 from algorithms import SearchPlanner
 
+from maze_generate import maze_generate
+
 # Simplest way to run on Macs
 matplotlib.use('MacOSX')
 
@@ -131,19 +133,16 @@ class AnimatedSearch:
         return path, memory
 
 
-
 def run_search(search_algorithm, search_type, show_animation = True):
-    parameters = load_parameters()
-    data = load_map_layout(parameters['map_xlsx'])
-    obstacle_map = create_obstacle_map(data)
-    # changed the config file to have better variables
-    start = (int(parameters['start_x']), int(parameters['start_y']))
-    goal = (int(parameters['goal_x']), int(parameters['goal_y']))
-    # main function for deciding the algorithm
-    algorithm_planner = SearchPlanner(parameters.get('grid_size', 1.0), obstacle_map, motion_model='4n')
-    fig_dim = parameters['fig_dim']
 
-    animated = AnimatedSearch(obstacle_map, start, goal, algorithm_planner, search_algorithm,
+    # Need a lot of visualisation fixes if the maze becomes big, then need a for loop
+    generated_maze, maze_start, maze_goal = maze_generate(15, 0.5)
+    data = pd.DataFrame(generated_maze)
+    obstacle_map = create_obstacle_map(data)
+    algorithm_planner = SearchPlanner(1, obstacle_map, motion_model='4n')
+    fig_dim = 10 # need a way to make this more dynamic
+
+    animated = AnimatedSearch(obstacle_map, maze_start, maze_goal, algorithm_planner, search_algorithm,
                                   {'1': 'tree', '2': 'graph'}.get(search_type),
                                   fig_dim, show_animation=show_animation)
 
@@ -153,6 +152,7 @@ def run_search(search_algorithm, search_type, show_animation = True):
     elapsed_time = time.time() - start_time
 
     return elapsed_time, path, memory
+
 
 def display_maze(search_algorithm, search_type, displayPlot = True):
     try:
@@ -189,11 +189,11 @@ def results_iterator (iterations = 1, search_types = ('2'), algorithms_types = (
                     # text = f'{search_type_titles.get(search)}_{algorithm_titles.get(algorithm)}'
                     search_results.append((algorithm,search,attempt,elapsed_time, len(path), memory[1]))
 
-
     except Exception as e:
         print(f"Error: {e}")
 
     return search_results
+
 
 def graph_results():
     search_results = results_iterator(iterations=3)
@@ -208,7 +208,7 @@ def graph_results():
     # print(results_df.describe())
 
     line_memory = sns.lineplot(y = 'Peak_Memory_Usage', x = 'Attempts', data = results_df, hue = 'Algorithm_And_Search_Name', marker = 'o')
-     # plt.ylim(results_df['Time'].min(), results_df['Time'].max())
+    # plt.ylim(results_df['Time'].min(), results_df['Time'].max())
     plt.legend(title = 'Search Algorithms')
     plt.title('Memory Usage Per Attempt Of Each Search Algorithm')
     plt.ylabel("Peak Memory Usage (Bytes)")
