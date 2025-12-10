@@ -84,9 +84,9 @@ class AnimatedSearch:
                         marker='s')
 
         self.ax.scatter(self.start[0], self.start[1], s=400,
-                        c='red', marker='s', edgecolors='black', label='Start')
+                        c='green', marker='s', edgecolors='black', label='Start')
         self.ax.scatter(self.goal[0], self.goal[1], s=400,
-                        c='green', marker='s', edgecolors='black', label='Goal')
+                        c='red', marker='s', edgecolors='black', label='Goal')
 
         # possibly add this as global const, will see later
         algorithm_titles = {'1': 'BFS', '2': 'DFS', '3': 'UCS', '4': 'A*'}
