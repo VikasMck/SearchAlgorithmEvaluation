@@ -136,6 +136,8 @@ class AnimatedSearch:
 def run_search(search_algorithm, search_type, show_animation = True):
 
     # Need a lot of visualisation fixes if the maze becomes big, then need a for loop
+    # you can change the approximate start/goal position
+    # (1 - bottom left; 2 - top left; 3 - bottom right; 4 - top right; 5 - centre, empty - random)
     generated_maze, maze_start, maze_goal = maze_generate(15, 0.5)
     data = pd.DataFrame(generated_maze)
     obstacle_map = create_obstacle_map(data)

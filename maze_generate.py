@@ -5,7 +5,7 @@ from collections import deque
 motion = [(0, 1), (1, 0), (0, -1), (-1, 0)]
 
 
-def maze_generate(maze_size, maze_density=None):
+def maze_generate(maze_size, maze_density=None, start_region_input=None, goal_region_input=None):
 
     generated_maze = []
 
@@ -57,11 +57,22 @@ def maze_generate(maze_size, maze_density=None):
 
     start_region = random.randint(1, 5)
     goal_region = random.randint(1, 5)
+
     while goal_region == start_region:
         goal_region = random.randint(1, 5)
 
-    maze_start = random_maze_region(start_region)
-    maze_goal = random_maze_region(goal_region)
+    if start_region_input is None and goal_region_input is None:
+        maze_start = random_maze_region(start_region)
+        maze_goal = random_maze_region(goal_region)
+    elif start_region_input is None:
+        maze_start = random_maze_region(start_region)
+        maze_goal = random_maze_region(goal_region_input)
+    elif goal_region_input is None:
+        maze_start = random_maze_region(start_region_input)
+        maze_goal = random_maze_region(goal_region)
+    else:
+        maze_start = random_maze_region(start_region_input)
+        maze_goal = random_maze_region(goal_region_input)
 
     generated_maze[maze_start[0]][maze_start[1]] = 0
     generated_maze[maze_goal[0]][maze_goal[1]] = 0
