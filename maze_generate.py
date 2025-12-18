@@ -46,7 +46,7 @@ class Maze:
 
         ax.legend()
         ax.set_title(title)
-
+        # https: // matplotlib.org / stable / api / _as_gen / matplotlib.pyplot.savefig.html
         fig.savefig(filename)
         plt.close(fig)
 
