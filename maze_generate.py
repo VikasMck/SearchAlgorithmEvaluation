@@ -1,11 +1,23 @@
 import random
 from collections import deque
+from dataclasses import dataclass
+
 
 # 4n without cost
 motion = [(0, 1), (1, 0), (0, -1), (-1, 0)]
 
+@dataclass
+class Maze:
+    generated_maze: list
+    maze_start: tuple[int, int]
+    maze_goal: tuple[int, int]
 
-def maze_generate(maze_size, maze_density=None, start_region_input=None, goal_region_input=None):
+
+
+def maze_generate(maze_size, maze_density=None, start_region_input=None, goal_region_input=None, random_seed = None):
+    # Included this to make the mazes reproducible for testing and also visual purposes
+    if random_seed is not None:
+        random.seed(random_seed)
 
     generated_maze = []
 
@@ -159,7 +171,7 @@ def maze_generate(maze_size, maze_density=None, start_region_input=None, goal_re
 
         generated_maze[maze_goal[0]][maze_goal[1]] = 0
 
-    return generated_maze, maze_start, maze_goal
+    return Maze(generated_maze, maze_start, maze_goal)
 
 
 def print_maze(generated_maze, maze_start, maze_goal):

@@ -8,7 +8,7 @@ import tracemalloc
 import seaborn as sns
 from algorithms import SearchPlanner
 
-from maze_generate import maze_generate
+from maze_generate import maze_generate,Maze
 
 # Simplest way to run on Macs
 matplotlib.use('MacOSX')
@@ -133,18 +133,18 @@ class AnimatedSearch:
         return path, memory
 
 
-def run_search(search_algorithm, search_type, show_animation = True):
+def run_search(search_algorithm, search_type, show_animation = True, maze = maze_generate(15, 0.5) ):
 
     # Need a lot of visualisation fixes if the maze becomes big, then need a for loop
     # you can change the approximate start/goal position
     # (1 - bottom left; 2 - top left; 3 - bottom right; 4 - top right; 5 - centre, empty - random)
-    generated_maze, maze_start, maze_goal = maze_generate(15, 0.5)
-    data = pd.DataFrame(generated_maze)
-    obstacle_map = create_obstacle_map(data)
+
+
+    obstacle_map = create_obstacle_map(pd.DataFrame(maze.generated_maze))
     algorithm_planner = SearchPlanner(1, obstacle_map, motion_model='4n')
     fig_dim = 10 # need a way to make this more dynamic
 
-    animated = AnimatedSearch(obstacle_map, maze_start, maze_goal, algorithm_planner, search_algorithm,
+    animated = AnimatedSearch(obstacle_map, maze.maze_start, maze.maze_goal, algorithm_planner, search_algorithm,
                                   {'1': 'tree', '2': 'graph'}.get(search_type),
                                   fig_dim, show_animation=show_animation)
 
