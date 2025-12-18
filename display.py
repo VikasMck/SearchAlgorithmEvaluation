@@ -154,7 +154,7 @@ def run_search(search_algorithm, search_type, show_animation = True, maze = maze
     elapsed_time = time.time() - start_time
 
     # To Test Only
-    maze.save_maze()
+    # maze.save_maze()
 
     return elapsed_time, path, memory
 
@@ -204,6 +204,11 @@ def graph_results():
     mazes = [maze_generate(10, 0.5),
              maze_generate(15, 0.5),
              maze_generate(20, 0.5)]
+
+    titles = {1:'Easy', 2:'Medium', 3:'Hard'}
+    for i, maze in enumerate(mazes):
+        i += 1
+        maze.save_maze(filename=f'{titles.get(i)}_Maze.png', title=f'{titles.get(i)} Maze')
 
     search_results = results_iterator(mazes)
 
