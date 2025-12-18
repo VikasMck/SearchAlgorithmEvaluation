@@ -1,11 +1,61 @@
 import random
 from collections import deque
+from dataclasses import dataclass
+
+import numpy as np
+import pandas as pd
+from matplotlib import pyplot as plt
 
 # 4n without cost
 motion = [(0, 1), (1, 0), (0, -1), (-1, 0)]
 
 
-def maze_generate(maze_size, maze_density=None, start_region_input=None, goal_region_input=None):
+@dataclass
+class Maze:
+    generated_maze: list
+    maze_start: tuple[int, int]
+    maze_goal: tuple[int, int]
+
+    def get_obstacle_map(self):
+        data = pd.DataFrame(self.generated_maze)
+        return [[bool(data[index_x][index_y]) for index_y in range(data.shape[0])]
+                for index_x in range(data.shape[1])]
+
+    def save_maze(self, fig_size=(10, 10), filename='maze.png', title='Maze'):
+        obstacle_map = self.get_obstacle_map()
+        width, height = len(obstacle_map[1]), len(obstacle_map[0])
+        fig, ax = plt.subplots(figsize=fig_size)
+        ax.set_xlim(-1, width)
+        ax.set_ylim(-1, height)
+        ax.grid(True)
+        ax.set_aspect('equal')
+
+        grid = np.array(obstacle_map)
+
+        empty_y, empty_x = np.where(~grid)
+        ax.scatter(empty_x, empty_y, s=300, c='blue',
+                   marker='s', edgecolors='black')
+
+        obstacle_y, obstacle_x = np.where(grid)
+        ax.scatter(obstacle_x, obstacle_y, s=300, c='gray',
+                   marker='s')
+
+        ax.scatter(self.maze_start[0], self.maze_start[1], s=400,
+                   c='green', marker='s', edgecolors='black', label='Start')
+        ax.scatter(self.maze_goal[0], self.maze_goal[1], s=400,
+                   c='red', marker='s', edgecolors='black', label='Goal')
+
+        ax.legend()
+        ax.set_title(title)
+        # https: // matplotlib.org / stable / api / _as_gen / matplotlib.pyplot.savefig.html
+        fig.savefig(filename)
+        plt.close(fig)
+
+
+def maze_generate(maze_size, maze_density=None, start_region_input=None, goal_region_input=None, random_seed=None):
+    # Included this to make the mazes reproducible for testing and also visual purposes
+    if random_seed is not None:
+        random.seed(random_seed)
 
     generated_maze = []
 
@@ -15,8 +65,8 @@ def maze_generate(maze_size, maze_density=None, start_region_input=None, goal_re
 
     # fill the middle with 0s, that makes the outer wall in the simplest way and it is
     # easier to ensure a path exists later on
-    for i in range(1, maze_size-1):
-        for j in range(1, maze_size-1):
+    for i in range(1, maze_size - 1):
+        for j in range(1, maze_size - 1):
             generated_maze[i][j] = 0
 
     # this I made so there's randomness in maze vastness, and went down a rabbit hole of learning
@@ -35,8 +85,8 @@ def maze_generate(maze_size, maze_density=None, start_region_input=None, goal_re
     # generated 0.0 to 1.0 value and then it gets compared with the wall_density, so the bigger the number is
     # the more likely to create a wall, hence the ~0.59 threshold in percolation which is a
     # super long theory of how it works.
-    for i in range(1, maze_size-1):
-        for j in range(1, maze_size-1):
+    for i in range(1, maze_size - 1):
+        for j in range(1, maze_size - 1):
             if random.random() < wall_density:
                 generated_maze[i][j] = 1
 
@@ -144,7 +194,7 @@ def maze_generate(maze_size, maze_density=None, start_region_input=None, goal_re
             generated_maze[y_coord][x_coord] = 0
             for change_y, change_x in motion:
                 neighbour_y, neighbour_x = y_coord + change_y, x_coord + change_x
-                if 1 <= neighbour_y < maze_size-1 and 1 <= neighbour_x < maze_size-1:
+                if 1 <= neighbour_y < maze_size - 1 and 1 <= neighbour_x < maze_size - 1:
                     # adding randomness to clearing the maze, so it is not just straight
                     if random.random() < 0.5:
                         generated_maze[neighbour_y][neighbour_x] = 0
@@ -159,7 +209,7 @@ def maze_generate(maze_size, maze_density=None, start_region_input=None, goal_re
 
         generated_maze[maze_goal[0]][maze_goal[1]] = 0
 
-    return generated_maze, maze_start, maze_goal
+    return Maze(generated_maze, maze_start, maze_goal)
 
 
 def print_maze(generated_maze, maze_start, maze_goal):
@@ -168,9 +218,7 @@ def print_maze(generated_maze, maze_start, maze_goal):
     print(f"\nStart: {maze_start}")
     print(f"Goal: {maze_goal}")
 
-
 # for i in range(10, 25, 5):
 #     for j in range(1, 5):
 #         generated_maze, maze_start, maze_goal = maze_generate(i, j * 0.1)
 #         print_maze(generated_maze, maze_start, maze_goal)
-

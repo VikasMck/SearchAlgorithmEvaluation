@@ -8,7 +8,7 @@ import tracemalloc
 import seaborn as sns
 from algorithms import SearchPlanner
 
-from maze_generate import maze_generate
+from maze_generate import maze_generate,Maze
 
 # Simplest way to run on Macs
 matplotlib.use('MacOSX')
@@ -133,18 +133,18 @@ class AnimatedSearch:
         return path, memory
 
 
-def run_search(search_algorithm, search_type, show_animation = True):
+def run_search(search_algorithm, search_type, show_animation = True, maze = maze_generate(20, 0.5) ):
 
     # Need a lot of visualisation fixes if the maze becomes big, then need a for loop
     # you can change the approximate start/goal position
     # (1 - bottom left; 2 - top left; 3 - bottom right; 4 - top right; 5 - centre, empty - random)
-    generated_maze, maze_start, maze_goal = maze_generate(15, 0.5)
-    data = pd.DataFrame(generated_maze)
-    obstacle_map = create_obstacle_map(data)
+
+    obstacle_map = maze.get_obstacle_map()
+
     algorithm_planner = SearchPlanner(1, obstacle_map, motion_model='4n')
     fig_dim = 10 # need a way to make this more dynamic
 
-    animated = AnimatedSearch(obstacle_map, maze_start, maze_goal, algorithm_planner, search_algorithm,
+    animated = AnimatedSearch(obstacle_map, maze.maze_start, maze.maze_goal, algorithm_planner, search_algorithm,
                                   {'1': 'tree', '2': 'graph'}.get(search_type),
                                   fig_dim, show_animation=show_animation)
 
@@ -152,6 +152,9 @@ def run_search(search_algorithm, search_type, show_animation = True):
     start_time = time.time()
     path, memory = animated.search_with_animation()
     elapsed_time = time.time() - start_time
+
+    # To Test Only
+    # maze.save_maze()
 
     return elapsed_time, path, memory
 
@@ -179,15 +182,15 @@ def get_cost(path):
     return sum([1 for _ in path])
 
 
-def results_iterator (iterations = 1, search_types = ('2'), algorithms_types = ('1', '2', '3', '4')):
+def results_iterator (mazes, search_types = ('2'), algorithms_types = ('1', '2', '3', '4')):
     search_results = list()
     try:
         for algorithm in algorithms_types:
             for search in search_types:
                 attempt = 0
-                for iteration in range(iterations):
+                for maze in mazes:
                     attempt += 1
-                    elapsed_time, path, memory = run_search(algorithm, search, False)
+                    elapsed_time, path, memory = run_search(algorithm, search, False,maze)
                     # text = f'{search_type_titles.get(search)}_{algorithm_titles.get(algorithm)}'
                     search_results.append((algorithm,search,attempt,elapsed_time, len(path), memory[1]))
 
@@ -198,7 +201,16 @@ def results_iterator (iterations = 1, search_types = ('2'), algorithms_types = (
 
 
 def graph_results():
-    search_results = results_iterator(iterations=3)
+    mazes = [maze_generate(10, 0.5),
+             maze_generate(15, 0.5),
+             maze_generate(20, 0.5)]
+
+    titles = {1:'Easy', 2:'Medium', 3:'Hard'}
+    for i, maze in enumerate(mazes):
+        i += 1
+        maze.save_maze(filename=f'{titles.get(i)}_Maze.png', title=f'{titles.get(i)} Maze')
+
+    search_results = results_iterator(mazes)
 
     results_df = pd.DataFrame(search_results, columns=['Search_Algorithm','Search_Type','Attempts','Time', 'Path', 'Peak_Memory_Usage'])
 
