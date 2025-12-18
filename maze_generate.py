@@ -2,6 +2,9 @@ import random
 from collections import deque
 from dataclasses import dataclass
 
+import numpy as np
+import pandas as pd
+from matplotlib import pyplot as plt
 
 # 4n without cost
 motion = [(0, 1), (1, 0), (0, -1), (-1, 0)]
@@ -12,6 +15,40 @@ class Maze:
     maze_start: tuple[int, int]
     maze_goal: tuple[int, int]
 
+    def get_obstacle_map(self):
+        data = pd.DataFrame(self.generated_maze)
+        return [[bool(data[index_x][index_y]) for index_y in range(data.shape[0])]
+                for index_x in range(data.shape[1])]
+
+    def save_maze(self, fig_size = (10,10), filename='maze.png', title='Maze'):
+        obstacle_map = self.get_obstacle_map()
+        width, height = len(obstacle_map[1]), len(obstacle_map[0])
+        fig, ax = plt.subplots(figsize=fig_size)
+        ax.set_xlim(-1, width)
+        ax.set_ylim(-1, height)
+        ax.grid(True)
+        ax.set_aspect('equal')
+
+        grid = np.array(obstacle_map)
+
+        empty_y, empty_x = np.where(~grid)
+        ax.scatter(empty_x, empty_y, s=300, c='blue',
+                        marker='s', edgecolors='black')
+
+        obstacle_y, obstacle_x = np.where(grid)
+        ax.scatter(obstacle_x, obstacle_y, s=300, c='gray',
+                        marker='s')
+
+        ax.scatter(self.maze_start[0], self.maze_start[1], s=400,
+                        c='green', marker='s', edgecolors='black', label='Start')
+        ax.scatter(self.maze_goal[0], self.maze_goal[1], s=400,
+                        c='red', marker='s', edgecolors='black', label='Goal')
+
+        ax.legend()
+        ax.set_title(title)
+
+        fig.savefig(filename)
+        plt.close(fig)
 
 
 def maze_generate(maze_size, maze_density=None, start_region_input=None, goal_region_input=None, random_seed = None):
