@@ -139,7 +139,7 @@ class SearchPlanner:
                 open_set_store.add(child_id)
 
         return None
-
+#TODO: Need to not use a dict as this will cause overwriting which makes it not a tree search
     def planning_ucs(self, start_x, start_y, goal_x, goal_y, search_type='graph'):
         start_node = self.Node(start_x, start_y, 0.0, -1, None)
         goal_node = self.Node(goal_x, goal_y, 0.0, -1, None)
@@ -149,11 +149,6 @@ class SearchPlanner:
 
         visited_nodes = dict()
 
-        closed_sets = \
-            {
-                'graph': closed_set,
-                'tree': visited_nodes,
-            }
 
         while len(open_set) > 0:
             parent_id = min(open_set, key=lambda o: open_set[o].cost)
@@ -182,7 +177,15 @@ class SearchPlanner:
                 child = self.Node(next_x, next_y, parent.cost + cost, parent_id, parent)
                 child_id = self.calculate_grid_index(child)
 
-                if child_id in closed_sets[search_type]:
+
+                if search_type == 'tree' and self.is_tree_looping(parent,child):
+                    continue
+
+                if search_type == 'tree':
+                    open_set[child_id] = child
+                    continue
+
+                if child_id in closed_set and search_type == 'graph':
                     continue
 
                 if child_id not in open_set:
@@ -209,7 +212,7 @@ class SearchPlanner:
 
         # adding the start node to the queue and the initial heuristic calculation
         heapq.heappush(priority_queue,
-                       (self.calculate_heuristic(start_node, goal_node, heuristic_type), start_id))
+                       (self.calculate_heuristic(start_node, goal_node, heuristic_type), start_id, start_node))
         # just adding extra info, will see it later on also next to heappush
         lookup_dictionary[start_id] = start_node
 
@@ -219,7 +222,7 @@ class SearchPlanner:
 
             # so this the main optimisation with heapq, instead of me using lambda with min every time which is
             # O(n), this does is O(log(n)) by popping the smallest value, and ignoring the first value which is the f(x)
-            _, current_id = heapq.heappop(priority_queue)
+            _, current_id, current = heapq.heappop(priority_queue)
 
             # https://gamedev.stackexchange.com/questions/210778/a-what-to-do-about-duplicate-items-in-the-min-heap-if-anything
             # basically point of this rework is to make it log(n), but heapq doesn't have way to remove entries so its
@@ -227,7 +230,9 @@ class SearchPlanner:
             if current_id in closed_set:
                 continue
 
-            current = lookup_dictionary.pop(current_id)
+            if search_type == 'graph':
+                current = lookup_dictionary.pop(current_id)
+                closed_set.add(current_id)
 
             if (current.x, current.y) == (goal_node.x, goal_node.y):
                 # goal_node.parent_index = current.parent_index
@@ -236,8 +241,6 @@ class SearchPlanner:
                 visited_nodes[current_id] = current
                 break
 
-            if search_type == 'graph':
-                closed_set.add(current_id)
 
             for change_x, change_y, cost in self.motion:
                 next_x = current.x + change_x
@@ -253,26 +256,31 @@ class SearchPlanner:
                 neighbour = self.Node(next_x, next_y, new_cost, current_id, current)
                 neighbour_id = self.calculate_grid_index(neighbour)
 
-                if search_type == 'graph' and neighbour_id in closed_set:
+
+                if search_type == 'tree' and self.is_tree_looping(current,neighbour) :
                     continue
 
-                # I have no clue what to do with this as tree search does not work for A*. Now with heapq there's
-                # very rare cases where it won't get stuck as if I add some limiters etc. then I'm just remaking
-                # graph search
-                if search_type == 'tree' and neighbour_id in lookup_dictionary:
+                if search_type == 'tree':
+                    heapq.heappush(priority_queue,
+                                   ((new_cost + self.calculate_heuristic(neighbour, goal_node, heuristic_type)),
+                                    neighbour_id, neighbour))
+                    visited_nodes[neighbour_id] = neighbour
+                    continue
+
+                if search_type == 'graph' and neighbour_id in closed_set:
                     continue
 
                 if neighbour_id not in lookup_dictionary:
                     # copying this from the start with the new cost +
                     heapq.heappush(priority_queue,
                                    ((new_cost + self.calculate_heuristic(neighbour, goal_node, heuristic_type)),
-                                    neighbour_id))
+                                    neighbour_id, neighbour))
                     lookup_dictionary[neighbour_id] = neighbour
                     visited_nodes[neighbour_id] = neighbour
                 elif new_cost < lookup_dictionary[neighbour_id].cost:
                     heapq.heappush(priority_queue,
                                    ((new_cost + self.calculate_heuristic(neighbour, goal_node, heuristic_type)),
-                                    neighbour_id))
+                                    neighbour_id, neighbour))
                     lookup_dictionary[neighbour_id] = neighbour
                     visited_nodes[neighbour_id] = neighbour
 
