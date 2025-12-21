@@ -35,7 +35,7 @@ class SearchPlanner:
     def planning_bfs(self, start_x, start_y, goal_x, goal_y, search_type='graph'):
         start_node = self.Node(start_x, start_y, 0.0, -1,None)
         goal_node = self.Node(goal_x, goal_y, 0.0, -1,None)
-
+        attempt = 0
         # FIFO
         queue = deque([start_node])
         visited_nodes = {}
@@ -43,13 +43,15 @@ class SearchPlanner:
         closed_set = set() if search_type == 'graph' else None
 
         while queue:
+            attempt += 1
+            # print(f"Attempt {attempt}")
             current = queue.popleft()
             current_id = self.calculate_grid_index(current)
 
             visited_nodes[current_id] = current
 
             if (current.x, current.y) == (goal_node.x, goal_node.y):
-                route_x, route_y = self.calculate_final_path(current, visited_nodes)
+                route_x, route_y = self.calculate_final_path(current)
                 path = [(route_x[i], route_y[i]) for i in range(len(route_x))]
                 return path
 
@@ -69,11 +71,13 @@ class SearchPlanner:
                         neighbour_id = self.calculate_grid_index(neighbour)
 
                         # tree needs fixing, either it gets stuck on infinite loop and return None, or other issues
-                        if search_type == 'tree':
-                            queue.append(neighbour)
-                        else:
-                            if neighbour_id not in closed_set:
-                                queue.append(neighbour)
+                        if (search_type == 'tree') and (self.is_tree_looping(current,neighbour)) :
+                            continue
+
+                        if (search_type == 'graph') and (neighbour_id in closed_set):
+                            continue
+
+                        queue.append(neighbour)
         return None
 
     # to add later
@@ -88,16 +92,23 @@ class SearchPlanner:
         visited_nodes = {}
         closed_set = set()
 
+        attempt = 0
+
         while queue:
+
+            attempt += 1
+            # print(f"Attempt {attempt}")
+
             parent = queue.pop()
             parent_id = self.calculate_grid_index(parent)
 
-            open_set_store.remove(parent_id)
+            if search_type == 'graph':
+                open_set_store.remove(parent_id)
 
             visited_nodes[parent_id] = parent
 
             if parent == goal_node:
-                route_x, route_y = self.calculate_final_path(parent, visited_nodes)
+                route_x, route_y = self.calculate_final_path(parent)
                 path = [(route_x[i], route_y[i]) for i in range(len(route_x))]
                 return path
 
@@ -115,13 +126,13 @@ class SearchPlanner:
                 child = self.Node(next_x, next_y, parent.cost + cost, parent_id, parent)
                 child_id = self.calculate_grid_index(child)
 
-                if (child_id in open_set_store) & (search_type== 'graph'):
+                if (child_id in open_set_store) and (search_type== 'graph'):
                     continue
 
-                if (child_id in closed_set) & (search_type == 'graph'):
+                if (child_id in closed_set) and (search_type == 'graph'):
                     continue
 
-                if (search_type == 'tree') & (self.is_tree_looping(parent,child)):
+                if (search_type == 'tree') and (self.is_tree_looping(parent,child)):
                     continue
 
                 queue.append(child)
@@ -150,7 +161,7 @@ class SearchPlanner:
             visited_nodes[parent_id] = parent
 
             if parent == goal_node:
-                route_x, route_y = self.calculate_final_path(parent, visited_nodes)
+                route_x, route_y = self.calculate_final_path(parent)
                 path = [(route_x[i], route_y[i]) for i in range(len(route_x))]
                 return path
 
@@ -219,8 +230,9 @@ class SearchPlanner:
             current = lookup_dictionary.pop(current_id)
 
             if (current.x, current.y) == (goal_node.x, goal_node.y):
-                goal_node.parent_index = current.parent_index
-                goal_node.cost = current.cost
+                # goal_node.parent_index = current.parent_index
+                # goal_node.cost = current.cost
+                goal_node = current
                 visited_nodes[current_id] = current
                 break
 
@@ -264,7 +276,7 @@ class SearchPlanner:
                     lookup_dictionary[neighbour_id] = neighbour
                     visited_nodes[neighbour_id] = neighbour
 
-        route_x, route_y = self.calculate_final_path(goal_node, visited_nodes)
+        route_x, route_y = self.calculate_final_path(goal_node)
         path = [(route_x[i], route_y[i]) for i in range(len(route_x))]
 
         return path
@@ -297,13 +309,17 @@ class SearchPlanner:
         heuristic_weight = 1
         return heuristic_weight * abs(current_node.x - goal_node.x) + abs(current_node.y - goal_node.y)
 
-    def calculate_final_path(self, goal_node, visited_nodes):
+    def calculate_final_path(self, goal_node):
         route_x = [self.calculate_grid_position(goal_node.x, self.min_x)]
         route_y = [self.calculate_grid_position(goal_node.y, self.min_y)]
         parent_index = goal_node.parent_index
+        node = goal_node
+        # loop = 0
 
         while parent_index != -1:
-            node = visited_nodes.get(parent_index)
+            # loop += 1
+            # print(f'loop: {loop}')
+            node = node.parent
             route_x.append(self.calculate_grid_position(node.x, self.min_x))
             route_y.append(self.calculate_grid_position(node.y, self.min_y))
             parent_index = node.parent_index
