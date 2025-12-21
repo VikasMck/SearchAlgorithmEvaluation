@@ -133,7 +133,7 @@ class AnimatedSearch:
         return path, memory
 
 
-def run_search(search_algorithm, search_type, show_animation = True, maze = maze_generate(20, 0.5) ):
+def run_search(search_algorithm, search_type, show_animation = True, maze = maze_generate(10, 0.5,random_seed=1234) ):
 
     # Need a lot of visualisation fixes if the maze becomes big, then need a for loop
     # you can change the approximate start/goal position
@@ -154,7 +154,7 @@ def run_search(search_algorithm, search_type, show_animation = True, maze = maze
     elapsed_time = time.time() - start_time
 
     # To Test Only
-    # maze.save_maze()
+    maze.save_maze()
 
     return elapsed_time, path, memory
 
