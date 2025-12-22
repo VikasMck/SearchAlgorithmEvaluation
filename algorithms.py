@@ -139,20 +139,34 @@ class SearchPlanner:
                 open_set_store.add(child_id)
 
         return None
-#TODO: Need to not use a dict as this will cause overwriting which makes it not a tree search
+
     def planning_ucs(self, start_x, start_y, goal_x, goal_y, search_type='graph'):
         start_node = self.Node(start_x, start_y, 0.0, -1, None)
         goal_node = self.Node(goal_x, goal_y, 0.0, -1, None)
 
-        open_set, closed_set = dict(), dict()
-        open_set[self.calculate_grid_index(start_node)] = start_node
+        p_queue = []
+        heapq.heappush(p_queue, (start_node.cost, self.calculate_grid_index(start_node), start_node))
+        lookup_dict = {}
 
+        # open_set = dict()
+        closed_set = set()
         visited_nodes = dict()
 
+        # open_set[self.calculate_grid_index(start_node)] = start_node
+        lookup_dict[self.calculate_grid_index(start_node)] = start_node
 
-        while len(open_set) > 0:
-            parent_id = min(open_set, key=lambda o: open_set[o].cost)
-            parent = open_set[parent_id]
+
+        attempt = 0
+
+        while p_queue:
+            attempt += 1
+            # print(f"Attempt {attempt}")
+
+            _, parent_id, parent = heapq.heappop(p_queue)
+
+            # parent_id = min(open_set, key=lambda o: open_set[o].cost)
+            # parent = open_set[parent_id]
+
             visited_nodes[parent_id] = parent
 
             if parent == goal_node:
@@ -160,10 +174,12 @@ class SearchPlanner:
                 path = [(route_x[i], route_y[i]) for i in range(len(route_x))]
                 return path
 
-            del open_set[parent_id]
+            # del open_set[parent_id]
 
-
-            closed_set[parent_id] = parent
+            if search_type == 'graph':
+                closed_set.add(parent_id)
+                lookup_dict.pop(parent_id)
+                # closed_set[parent_id] = parent
 
             for change_x, change_y, cost in self.motion:
                 next_x, next_y = parent.x + change_x, parent.y + change_y
@@ -182,18 +198,21 @@ class SearchPlanner:
                     continue
 
                 if search_type == 'tree':
-                    open_set[child_id] = child
+                    heapq.heappush(p_queue, (child.cost, child_id, child))
+                    # open_set[child_id] = child
                     continue
 
                 if child_id in closed_set and search_type == 'graph':
                     continue
 
-                if child_id not in open_set:
-                    open_set[child_id] = child
+                if (child_id not in lookup_dict) or (child.cost < lookup_dict[child_id].cost):
+                    heapq.heappush(p_queue, (child.cost, child_id, child))
+                    lookup_dict[child_id] = child
                     continue
 
-                if child.cost < open_set[child_id].cost:
-                    open_set[child_id] = child
+
+
+
 
         return None
 
