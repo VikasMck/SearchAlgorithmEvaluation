@@ -3,7 +3,6 @@ from collections import deque
 import heapq
 
 
-
 # making a general class for all algorithms, similar to lab notes
 class SearchPlanner:
     def __init__(self, resolution, obstacle_map, motion_model='4n'):
@@ -33,8 +32,8 @@ class SearchPlanner:
 
     # plannings
     def planning_bfs(self, start_x, start_y, goal_x, goal_y, search_type='graph'):
-        start_node = self.Node(start_x, start_y, 0.0, -1,None)
-        goal_node = self.Node(goal_x, goal_y, 0.0, -1,None)
+        start_node = self.Node(start_x, start_y, 0.0, -1, None)
+        goal_node = self.Node(goal_x, goal_y, 0.0, -1, None)
         attempt = 0
         # FIFO
         queue = deque([start_node])
@@ -71,7 +70,7 @@ class SearchPlanner:
                         neighbour_id = self.calculate_grid_index(neighbour)
 
                         # tree needs fixing, either it gets stuck on infinite loop and return None, or other issues
-                        if (search_type == 'tree') and (self.is_tree_looping(current,neighbour)) :
+                        if (search_type == 'tree') and (self.is_tree_looping(current, neighbour)):
                             continue
 
                         if (search_type == 'graph') and (neighbour_id in closed_set):
@@ -126,13 +125,13 @@ class SearchPlanner:
                 child = self.Node(next_x, next_y, parent.cost + cost, parent_id, parent)
                 child_id = self.calculate_grid_index(child)
 
-                if (child_id in open_set_store) and (search_type== 'graph'):
+                if (child_id in open_set_store) and (search_type == 'graph'):
                     continue
 
                 if (child_id in closed_set) and (search_type == 'graph'):
                     continue
 
-                if (search_type == 'tree') and (self.is_tree_looping(parent,child)):
+                if (search_type == 'tree') and (self.is_tree_looping(parent, child)):
                     continue
 
                 queue.append(child)
@@ -154,7 +153,6 @@ class SearchPlanner:
 
         # open_set[self.calculate_grid_index(start_node)] = start_node
         lookup_dict[self.calculate_grid_index(start_node)] = start_node
-
 
         attempt = 0
 
@@ -193,8 +191,7 @@ class SearchPlanner:
                 child = self.Node(next_x, next_y, parent.cost + cost, parent_id, parent)
                 child_id = self.calculate_grid_index(child)
 
-
-                if search_type == 'tree' and self.is_tree_looping(parent,child):
+                if search_type == 'tree' and self.is_tree_looping(parent, child):
                     continue
 
                 if search_type == 'tree':
@@ -209,10 +206,6 @@ class SearchPlanner:
                     heapq.heappush(p_queue, (child.cost, child_id, child))
                     lookup_dict[child_id] = child
                     continue
-
-
-
-
 
         return None
 
@@ -260,7 +253,6 @@ class SearchPlanner:
                 visited_nodes[current_id] = current
                 break
 
-
             for change_x, change_y, cost in self.motion:
                 next_x = current.x + change_x
                 next_y = current.y + change_y
@@ -275,8 +267,7 @@ class SearchPlanner:
                 neighbour = self.Node(next_x, next_y, new_cost, current_id, current)
                 neighbour_id = self.calculate_grid_index(neighbour)
 
-
-                if search_type == 'tree' and self.is_tree_looping(current,neighbour) :
+                if search_type == 'tree' and self.is_tree_looping(current, neighbour):
                     continue
 
                 if search_type == 'tree':
@@ -309,13 +300,12 @@ class SearchPlanner:
         return path
 
     # Checks if the child node has already been in the current path of the parent if so its a loopt(true)
-    def is_tree_looping(self,parent,child):
+    def is_tree_looping(self, parent, child):
         while parent.parent is not None:
             if parent.parent == child:
                 return True
             parent = parent.parent
         return False
-
 
     # will be used later, similar to lab files
     def calculate_heuristic(self, current_node, goal_node, heuristic_type='euclidean'):

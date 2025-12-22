@@ -8,7 +8,7 @@ import tracemalloc
 import seaborn as sns
 from algorithms import SearchPlanner
 
-from maze_generate import maze_generate,Maze
+from maze_generate import maze_generate, Maze
 
 # Simplest way to run on Macs
 matplotlib.use('MacOSX')
@@ -53,7 +53,8 @@ def create_obstacle_map(data):
 
 # General class for animating, need to add on to it as currently only shows the final path.
 class AnimatedSearch:
-    def __init__(self, obstacle_map, start, goal, algorithm_planner, algorithm, search_type, fig_dim, show_animation = True):
+    def __init__(self, obstacle_map, start, goal, algorithm_planner, algorithm, search_type, fig_dim,
+                 show_animation=True):
         self.obstacle_map = obstacle_map
         self.start = start
         self.goal = goal
@@ -114,7 +115,6 @@ class AnimatedSearch:
         memory = tracemalloc.get_traced_memory()
         tracemalloc.stop()
 
-
         if not self.show_animation:
             return path, memory
 
@@ -133,8 +133,7 @@ class AnimatedSearch:
         return path, memory
 
 
-def run_search(search_algorithm, search_type, show_animation = True, maze = maze_generate(20, 0.5, random_seed=1234) ):
-
+def run_search(search_algorithm, search_type, show_animation=True, maze=maze_generate(20, 0.5, random_seed=1234)):
     # Need a lot of visualisation fixes if the maze becomes big, then need a for loop
     # you can change the approximate start/goal position
     # (1 - bottom left; 2 - top left; 3 - bottom right; 4 - top right; 5 - centre, empty - random)
@@ -142,11 +141,11 @@ def run_search(search_algorithm, search_type, show_animation = True, maze = maze
     obstacle_map = maze.get_obstacle_map()
 
     algorithm_planner = SearchPlanner(1, obstacle_map, motion_model='4n')
-    fig_dim = 10 # need a way to make this more dynamic
+    fig_dim = 10  # need a way to make this more dynamic
 
     animated = AnimatedSearch(obstacle_map, maze.maze_start, maze.maze_goal, algorithm_planner, search_algorithm,
-                                  {'1': 'tree', '2': 'graph'}.get(search_type),
-                                  fig_dim, show_animation=show_animation)
+                              {'1': 'tree', '2': 'graph'}.get(search_type),
+                              fig_dim, show_animation=show_animation)
 
     # another measure to count performance
     start_time = time.time()
@@ -159,7 +158,7 @@ def run_search(search_algorithm, search_type, show_animation = True, maze = maze
     return elapsed_time, path, memory
 
 
-def display_maze(search_algorithm, search_type, displayPlot = True):
+def display_maze(search_algorithm, search_type, displayPlot=True):
     try:
         elapsed_time, path, memory = run_search(search_algorithm, search_type)
 
@@ -182,7 +181,7 @@ def get_cost(path):
     return sum([1 for _ in path])
 
 
-def results_iterator (mazes, search_types = ('2'), algorithms_types = ('1', '2', '3', '4')):
+def results_iterator(mazes, search_types=('2'), algorithms_types=('1', '2', '3', '4')):
     search_results = list()
     try:
         for algorithm in algorithms_types:
@@ -190,9 +189,9 @@ def results_iterator (mazes, search_types = ('2'), algorithms_types = ('1', '2',
                 attempt = 0
                 for maze in mazes:
                     attempt += 1
-                    elapsed_time, path, memory = run_search(algorithm, search, False,maze)
+                    elapsed_time, path, memory = run_search(algorithm, search, False, maze)
                     # text = f'{search_type_titles.get(search)}_{algorithm_titles.get(algorithm)}'
-                    search_results.append((algorithm,search,attempt,elapsed_time, len(path), memory[1]))
+                    search_results.append((algorithm, search, attempt, elapsed_time, len(path), memory[1]))
 
     except Exception as e:
         print(f"Error: {e}")
@@ -205,47 +204,37 @@ def graph_results():
              maze_generate(15, 0.5),
              maze_generate(20, 0.5)]
 
-    titles = {1:'Easy', 2:'Medium', 3:'Hard'}
+    titles = {1: 'Easy', 2: 'Medium', 3: 'Hard'}
     for i, maze in enumerate(mazes):
         i += 1
         maze.save_maze(filename=f'{titles.get(i)}_Maze.png', title=f'{titles.get(i)} Maze')
 
     search_results = results_iterator(mazes)
 
-    results_df = pd.DataFrame(search_results, columns=['Search_Algorithm','Search_Type','Attempts','Time', 'Path', 'Peak_Memory_Usage'])
+    results_df = pd.DataFrame(search_results, columns=['Search_Algorithm', 'Search_Type', 'Attempts', 'Time', 'Path',
+                                                       'Peak_Memory_Usage'])
 
-    results_df['Algorithm_And_Search_Name'] = results_df["Search_Type"].map(search_type_titles) + '_'+ results_df["Search_Algorithm"].map(algorithm_titles)
+    results_df['Algorithm_And_Search_Name'] = results_df["Search_Type"].map(search_type_titles) + '_' + results_df[
+        "Search_Algorithm"].map(algorithm_titles)
     results_df['Search_Algorithm_Name'] = results_df["Search_Algorithm"].map(algorithm_titles)
     results_df['Search_Type_Name'] = results_df["Search_Type"].map(search_type_titles)
 
     # print(results_df['Algorithm_Name'])
     # print(results_df.describe())
 
-    line_memory = sns.lineplot(y = 'Peak_Memory_Usage', x = 'Attempts', data = results_df, hue = 'Algorithm_And_Search_Name', marker = 'o')
+    line_memory = sns.lineplot(y='Peak_Memory_Usage', x='Attempts', data=results_df, hue='Algorithm_And_Search_Name',
+                               marker='o')
     # plt.ylim(results_df['Time'].min(), results_df['Time'].max())
-    plt.legend(title = 'Search Algorithms')
+    plt.legend(title='Search Algorithms')
     plt.title('Memory Usage Per Attempt Of Each Search Algorithm')
     plt.ylabel("Peak Memory Usage (Bytes)")
     plt.xticks(results_df['Attempts'].unique())
     plt.show()
 
     bat_path = sns.barplot(y='Path', x='Search_Algorithm_Name', data=results_df, hue='Search_Type_Name')
-    plt.legend(title = 'Search Types')
+    plt.legend(title='Search Types')
     plt.title('Comparing Path Lengths Across Search Algorithms')
     plt.ylabel("Path Length")
     plt.xlabel("Search Algorithms")
     plt.yticks(results_df['Path'].unique())
     plt.show()
-
-
-
-
-
-
-
-
-
-
-
-
-
