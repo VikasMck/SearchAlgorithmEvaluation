@@ -102,7 +102,7 @@ class AnimatedSearch:
         # a way to track performance, need to add onto it later
         tracemalloc.start()
 
-        path = chosen_algorithm(self.start[0], self.start[1],
+        path, nodes_expanded = chosen_algorithm(self.start[0], self.start[1],
                                 self.goal[0], self.goal[1],
                                 search_type=self.search_type)
 
@@ -117,7 +117,7 @@ class AnimatedSearch:
         tracemalloc.stop()
 
         if not self.show_animation:
-            return path, memory
+            return path, memory, nodes_expanded
 
         print(f"Peak memory usage: {memory}")
 
@@ -131,7 +131,7 @@ class AnimatedSearch:
                 plt.plot(path_x, path_y, "-y", linewidth=4)
                 plt.pause(pause_time)
 
-        return path, memory
+        return path, memory, nodes_expanded
 
 
 def run_search(search_algorithm, search_type, show_animation=True, maze=maze_generate(20, 0.5, random_seed=1234)):
@@ -150,18 +150,18 @@ def run_search(search_algorithm, search_type, show_animation=True, maze=maze_gen
 
     # another measure to count performance
     start_time = time.time()
-    path, memory = animated.search_with_animation()
+    path, memory, nodes_expanded = animated.search_with_animation()
     elapsed_time = time.time() - start_time
 
     # To Test Only
     # maze.save_maze()
 
-    return elapsed_time, path, memory
+    return elapsed_time, path, memory, nodes_expanded
 
 
 def display_maze(search_algorithm, search_type, displayPlot=True):
     try:
-        elapsed_time, path, memory = run_search(search_algorithm, search_type)
+        elapsed_time, path, memory ,nodes_expanded = run_search(search_algorithm, search_type)
 
         if path:
             print(f"Path length: {len(path)} steps")
@@ -188,12 +188,12 @@ def results_iterator(mazes, search_types=('1','2'), algorithms_types=('1', '2', 
         for algorithm in algorithms_types:
             for search in search_types:
                 for maze in mazes:
-                    elapsed_time, path, memory = run_search(algorithm, search, False, maze)
+                    elapsed_time, path, memory, nodes_expanded = run_search(algorithm, search, False, maze)
                     path_length = len(path) if path is not None else np.nan
-                    search_results.append((algorithm, search, elapsed_time, path_length, memory[1], maze.size, maze.density, maze.start_reigon, maze.goal_reigon, maze))
+                    search_results.append((algorithm, search, elapsed_time, path_length, nodes_expanded , memory[1], maze.size, maze.density, maze.start_reigon, maze.goal_reigon, maze))
 
         results_df = pd.DataFrame(search_results,
-                                  columns=['Search_Algorithm', 'Search_Type', 'Time', 'Path_Size',
+                                  columns=['Search_Algorithm', 'Search_Type', 'Time', 'Path_Size', 'Num_Nodes_Expanded',
                                            'Peak_Memory_Usage','Maze_Size','Maze_Density','Start_Region','Goal_Region','Maze_Object'])
 
         results_df['Algorithm_And_Search_Name'] = results_df["Search_Type"].map(search_type_titles) + '_' + results_df[
@@ -201,7 +201,7 @@ def results_iterator(mazes, search_types=('1','2'), algorithms_types=('1', '2', 
         results_df['Search_Algorithm_Name'] = results_df["Search_Algorithm"].map(algorithm_titles)
         results_df['Search_Type_Name'] = results_df["Search_Type"].map(search_type_titles)
 
-        results_df = results_df[['Algorithm_And_Search_Name','Maze_Size','Maze_Density','Path_Size','Time','Peak_Memory_Usage','Start_Region','Goal_Region','Search_Type','Search_Algorithm','Search_Type_Name','Search_Algorithm_Name','Maze_Object']]
+        results_df = results_df[['Algorithm_And_Search_Name','Maze_Size','Maze_Density','Path_Size','Num_Nodes_Expanded','Time','Peak_Memory_Usage','Start_Region','Goal_Region','Search_Type','Search_Algorithm','Search_Type_Name','Search_Algorithm_Name','Maze_Object']]
 
 
     except Exception as e:
@@ -227,9 +227,9 @@ def graph_results():
              maze_generate(15, 0.5),
              maze_generate(20, 0.5)]
     sizes = [10, 15, 20]
-    densitys = [0.0, 0.25, 0.5]
+    density = [0.0, 0.25, 0.5]
     regions = list(range(1, 6))
-    mazes = create_maze_list(sizes, densitys, regions)
+    mazes = create_maze_list(sizes, density, regions)
 
     # titles = {1: 'Easy', 2: 'Medium', 3: 'Hard'}
     # for i, maze in enumerate(mazes):
