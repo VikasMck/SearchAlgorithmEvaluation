@@ -191,50 +191,73 @@ def results_iterator(mazes, search_types=('2'), algorithms_types=('1', '2', '3',
                     attempt += 1
                     elapsed_time, path, memory = run_search(algorithm, search, False, maze)
                     # text = f'{search_type_titles.get(search)}_{algorithm_titles.get(algorithm)}'
-                    search_results.append((algorithm, search, attempt, elapsed_time, len(path), memory[1]))
+                    search_results.append((algorithm, search, attempt, elapsed_time, len(path), memory[1], maze.size, maze.density, maze.start_reigon, maze.goal_reigon, maze))
+
+        results_df = pd.DataFrame(search_results,
+                                  columns=['Search_Algorithm', 'Search_Type', 'Attempts', 'Time', 'Path',
+                                           'Peak_Memory_Usage','Maze_Size','Maze_Density','Start_Region','Goal_Region','Maze_Object'])
 
     except Exception as e:
         print(f"Error: {e}")
 
-    return search_results
+    return results_df
+
+def create_maze_list(sizes, densitys, regions, random_seed=81):
+    maze_list = []
+    for size in sizes:
+        for density in densitys:
+            for start_region in regions:
+                for end_region in regions:
+                    if start_region == end_region:
+                        continue
+                    maze_list.append(maze_generate(size, density, start_region, end_region, random_seed))
+
+    return maze_list
 
 
 def graph_results():
     mazes = [maze_generate(10, 0.5),
              maze_generate(15, 0.5),
              maze_generate(20, 0.5)]
+    sizes = [10, 15, 20]
+    densitys = [0.0, 0.25, 0.5]
+    regions = list(range(1, 6))
+    mazes = create_maze_list(sizes, densitys, regions)
 
     titles = {1: 'Easy', 2: 'Medium', 3: 'Hard'}
     for i, maze in enumerate(mazes):
         i += 1
         maze.save_maze(filename=f'{titles.get(i)}_Maze.png', title=f'{titles.get(i)} Maze')
 
-    search_results = results_iterator(mazes)
+    # search_results = results_iterator(mazes)
 
-    results_df = pd.DataFrame(search_results, columns=['Search_Algorithm', 'Search_Type', 'Attempts', 'Time', 'Path',
-                                                       'Peak_Memory_Usage'])
+    # results_df = pd.DataFrame(search_results, columns=['Search_Algorithm', 'Search_Type', 'Attempts', 'Time', 'Path',
+                                                       # 'Peak_Memory_Usage'])
+    results_df = results_iterator(mazes)
 
     results_df['Algorithm_And_Search_Name'] = results_df["Search_Type"].map(search_type_titles) + '_' + results_df[
         "Search_Algorithm"].map(algorithm_titles)
     results_df['Search_Algorithm_Name'] = results_df["Search_Algorithm"].map(algorithm_titles)
     results_df['Search_Type_Name'] = results_df["Search_Type"].map(search_type_titles)
 
+    results_df.to_csv('results_df.csv', index=False)
+
     # print(results_df['Algorithm_Name'])
     # print(results_df.describe())
 
-    line_memory = sns.lineplot(y='Peak_Memory_Usage', x='Attempts', data=results_df, hue='Algorithm_And_Search_Name',
-                               marker='o')
-    # plt.ylim(results_df['Time'].min(), results_df['Time'].max())
-    plt.legend(title='Search Algorithms')
-    plt.title('Memory Usage Per Attempt Of Each Search Algorithm')
-    plt.ylabel("Peak Memory Usage (Bytes)")
-    plt.xticks(results_df['Attempts'].unique())
-    plt.show()
-
-    bat_path = sns.barplot(y='Path', x='Search_Algorithm_Name', data=results_df, hue='Search_Type_Name')
-    plt.legend(title='Search Types')
-    plt.title('Comparing Path Lengths Across Search Algorithms')
-    plt.ylabel("Path Length")
-    plt.xlabel("Search Algorithms")
-    plt.yticks(results_df['Path'].unique())
-    plt.show()
+    # line_memory = sns.lineplot(y='Peak_Memory_Usage', x='Attempts', data=results_df, hue='Algorithm_And_Search_Name',
+    #                            marker='o')
+    # # plt.ylim(results_df['Time'].min(), results_df['Time'].max())
+    # plt.legend(title='Search Algorithms')
+    # plt.title('Memory Usage Per Attempt Of Each Search Algorithm')
+    # plt.ylabel("Peak Memory Usage (Bytes)")
+    # plt.xticks(results_df['Attempts'].unique())
+    # plt.show()
+    #
+    # bat_path = sns.barplot(y='Path', x='Search_Algorithm_Name', data=results_df, hue='Search_Type_Name')
+    # plt.legend(title='Search Types')
+    # plt.title('Comparing Path Lengths Across Search Algorithms')
+    # plt.ylabel("Path Length")
+    # plt.xlabel("Search Algorithms")
+    # plt.yticks(results_df['Path'].unique())
+    # plt.show()

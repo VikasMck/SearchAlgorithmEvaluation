@@ -43,7 +43,7 @@ class SearchPlanner:
 
         while queue:
             attempt += 1
-            # print(f"Attempt {attempt}")
+            print(f"BFS {attempt}")
             current = queue.popleft()
             current_id = self.calculate_grid_index(current)
 
@@ -96,7 +96,7 @@ class SearchPlanner:
         while queue:
 
             attempt += 1
-            # print(f"Attempt {attempt}")
+            print(f"DFS {attempt}")
 
             parent = queue.pop()
             parent_id = self.calculate_grid_index(parent)
@@ -158,7 +158,7 @@ class SearchPlanner:
 
         while p_queue:
             attempt += 1
-            # print(f"Attempt {attempt}")
+            print(f"UCS {attempt}")
 
             _, parent_id, parent = heapq.heappop(p_queue)
 
@@ -230,7 +230,11 @@ class SearchPlanner:
 
         visited_nodes = {start_id: start_node}
 
+        attempt = 0
+
         while priority_queue:
+            attempt += 1
+            print(f"ASTAR {attempt}")
 
             # so this the main optimisation with heapq, instead of me using lambda with min every time which is
             # O(n), this does is O(log(n)) by popping the smallest value, and ignoring the first value which is the f(x)
