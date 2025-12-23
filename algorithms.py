@@ -2,6 +2,7 @@ import math
 from collections import deque
 import heapq
 
+DEBUG_FLAG = True
 
 # making a general class for all algorithms, similar to lab notes
 class SearchPlanner:
@@ -34,7 +35,7 @@ class SearchPlanner:
     def planning_bfs(self, start_x, start_y, goal_x, goal_y, search_type='graph'):
         start_node = self.Node(start_x, start_y, 0.0, -1, None)
         goal_node = self.Node(goal_x, goal_y, 0.0, -1, None)
-        attempt = 0
+        nodes_expanded = 0
         # FIFO
         queue = deque([start_node])
         visited_nodes = {}
@@ -42,8 +43,10 @@ class SearchPlanner:
         closed_set = set() if search_type == 'graph' else None
 
         while queue:
-            attempt += 1
-            print(f"BFS {attempt}")
+            nodes_expanded += 1
+
+            self.debug_print(nodes_expanded, 'BFS')
+
             current = queue.popleft()
             current_id = self.calculate_grid_index(current)
 
@@ -91,12 +94,12 @@ class SearchPlanner:
         visited_nodes = {}
         closed_set = set()
 
-        attempt = 0
+        nodes_expanded = 0
 
         while queue:
 
-            attempt += 1
-            print(f"DFS {attempt}")
+            nodes_expanded += 1
+            self.debug_print(nodes_expanded, 'DFS')
 
             parent = queue.pop()
             parent_id = self.calculate_grid_index(parent)
@@ -154,11 +157,11 @@ class SearchPlanner:
         # open_set[self.calculate_grid_index(start_node)] = start_node
         lookup_dict[self.calculate_grid_index(start_node)] = start_node
 
-        attempt = 0
+        nodes_expanded = 0
 
         while p_queue:
-            attempt += 1
-            print(f"UCS {attempt}")
+            nodes_expanded += 1
+            self.debug_print(nodes_expanded, 'UCS')
 
             _, parent_id, parent = heapq.heappop(p_queue)
 
@@ -230,11 +233,11 @@ class SearchPlanner:
 
         visited_nodes = {start_id: start_node}
 
-        attempt = 0
+        nodes_expanded = 0
 
         while priority_queue:
-            attempt += 1
-            print(f"ASTAR {attempt}")
+            nodes_expanded += 1
+            self.debug_print(nodes_expanded, 'AStar')
 
             # so this the main optimisation with heapq, instead of me using lambda with min every time which is
             # O(n), this does is O(log(n)) by popping the smallest value, and ignoring the first value which is the f(x)
@@ -310,6 +313,11 @@ class SearchPlanner:
                 return True
             parent = parent.parent
         return False
+
+    #Prints Debugging Messages If want to debug
+    def debug_print(self, nodes_expanded, text):
+        if DEBUG_FLAG:
+            print(f"{text} {nodes_expanded}")
 
     # will be used later, similar to lab files
     def calculate_heuristic(self, current_node, goal_node, heuristic_type='euclidean'):

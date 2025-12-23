@@ -107,9 +107,10 @@ class AnimatedSearch:
                                 search_type=self.search_type)
 
         # fault check
-        if path is None:
+        if path is None and self.show_animation:
             print("No path found!")
             return None
+
 
         # saves current and peak
         memory = tracemalloc.get_traced_memory()
@@ -153,7 +154,7 @@ def run_search(search_algorithm, search_type, show_animation=True, maze=maze_gen
     elapsed_time = time.time() - start_time
 
     # To Test Only
-    maze.save_maze()
+    # maze.save_maze()
 
     return elapsed_time, path, memory
 
@@ -181,21 +182,27 @@ def get_cost(path):
     return sum([1 for _ in path])
 
 
-def results_iterator(mazes, search_types=('2'), algorithms_types=('1', '2', '3', '4')):
+def results_iterator(mazes, search_types=('1','2'), algorithms_types=('1', '2', '3', '4')):
     search_results = list()
     try:
         for algorithm in algorithms_types:
             for search in search_types:
-                attempt = 0
                 for maze in mazes:
-                    attempt += 1
                     elapsed_time, path, memory = run_search(algorithm, search, False, maze)
-                    # text = f'{search_type_titles.get(search)}_{algorithm_titles.get(algorithm)}'
-                    search_results.append((algorithm, search, attempt, elapsed_time, len(path), memory[1], maze.size, maze.density, maze.start_reigon, maze.goal_reigon, maze))
+                    path_length = len(path) if path is not None else np.nan
+                    search_results.append((algorithm, search, elapsed_time, path_length, memory[1], maze.size, maze.density, maze.start_reigon, maze.goal_reigon, maze))
 
         results_df = pd.DataFrame(search_results,
-                                  columns=['Search_Algorithm', 'Search_Type', 'Attempts', 'Time', 'Path',
+                                  columns=['Search_Algorithm', 'Search_Type', 'Time', 'Path_Size',
                                            'Peak_Memory_Usage','Maze_Size','Maze_Density','Start_Region','Goal_Region','Maze_Object'])
+
+        results_df['Algorithm_And_Search_Name'] = results_df["Search_Type"].map(search_type_titles) + '_' + results_df[
+            "Search_Algorithm"].map(algorithm_titles)
+        results_df['Search_Algorithm_Name'] = results_df["Search_Algorithm"].map(algorithm_titles)
+        results_df['Search_Type_Name'] = results_df["Search_Type"].map(search_type_titles)
+
+        results_df = results_df[['Algorithm_And_Search_Name','Maze_Size','Maze_Density','Path_Size','Time','Peak_Memory_Usage','Start_Region','Goal_Region','Search_Type','Search_Algorithm','Search_Type_Name','Search_Algorithm_Name','Maze_Object']]
+
 
     except Exception as e:
         print(f"Error: {e}")
@@ -224,21 +231,14 @@ def graph_results():
     regions = list(range(1, 6))
     mazes = create_maze_list(sizes, densitys, regions)
 
-    titles = {1: 'Easy', 2: 'Medium', 3: 'Hard'}
-    for i, maze in enumerate(mazes):
-        i += 1
-        maze.save_maze(filename=f'{titles.get(i)}_Maze.png', title=f'{titles.get(i)} Maze')
+    # titles = {1: 'Easy', 2: 'Medium', 3: 'Hard'}
+    # for i, maze in enumerate(mazes):
+    #     i += 1
+    #     maze.save_maze(filename=f'{titles.get(i)}_Maze.png', title=f'{titles.get(i)} Maze')
 
-    # search_results = results_iterator(mazes)
-
-    # results_df = pd.DataFrame(search_results, columns=['Search_Algorithm', 'Search_Type', 'Attempts', 'Time', 'Path',
-                                                       # 'Peak_Memory_Usage'])
     results_df = results_iterator(mazes)
 
-    results_df['Algorithm_And_Search_Name'] = results_df["Search_Type"].map(search_type_titles) + '_' + results_df[
-        "Search_Algorithm"].map(algorithm_titles)
-    results_df['Search_Algorithm_Name'] = results_df["Search_Algorithm"].map(algorithm_titles)
-    results_df['Search_Type_Name'] = results_df["Search_Type"].map(search_type_titles)
+
 
     results_df.to_csv('results_df.csv', index=False)
 
