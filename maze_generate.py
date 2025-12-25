@@ -213,7 +213,7 @@ def maze_generate(maze_size, maze_density=None, start_region_input=None, goal_re
 
         generated_maze[maze_goal[0]][maze_goal[1]] = 0
 
-    return Maze(generated_maze, maze_start, maze_goal,maze_size,maze_density,start_region_input, goal_region_input)
+    return Maze(generated_maze, maze_start, maze_goal, maze_size, maze_density, start_region_input, goal_region_input)
 
 
 def print_maze(generated_maze, maze_start, maze_goal):

@@ -5,6 +5,7 @@ import heapq
 DEBUG_FLAG = True
 NODES_EXPANSION_LIMIT = 200_000
 
+
 # making a general class for all algorithms, similar to lab notes
 class SearchPlanner:
     def __init__(self, resolution, obstacle_map, motion_model='4n'):
