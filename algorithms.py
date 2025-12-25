@@ -2,6 +2,9 @@ import math
 from collections import deque
 import heapq
 
+DEBUG_FLAG = True
+NODES_EXPANSION_LIMIT = 200_000
+
 
 # making a general class for all algorithms, similar to lab notes
 class SearchPlanner:
@@ -34,7 +37,7 @@ class SearchPlanner:
     def planning_bfs(self, start_x, start_y, goal_x, goal_y, search_type='graph'):
         start_node = self.Node(start_x, start_y, 0.0, -1, None)
         goal_node = self.Node(goal_x, goal_y, 0.0, -1, None)
-        attempt = 0
+        nodes_expanded = 0
         # FIFO
         queue = deque([start_node])
         visited_nodes = {}
@@ -42,8 +45,10 @@ class SearchPlanner:
         closed_set = set() if search_type == 'graph' else None
 
         while queue:
-            attempt += 1
-            # print(f"Attempt {attempt}")
+            nodes_expanded += 1
+
+            self.debug_print(f'BFS {search_type} {nodes_expanded}')
+
             current = queue.popleft()
             current_id = self.calculate_grid_index(current)
 
@@ -52,7 +57,11 @@ class SearchPlanner:
             if (current.x, current.y) == (goal_node.x, goal_node.y):
                 route_x, route_y = self.calculate_final_path(current)
                 path = [(route_x[i], route_y[i]) for i in range(len(route_x))]
-                return path
+                return path, nodes_expanded
+
+            if nodes_expanded > NODES_EXPANSION_LIMIT:
+                self.debug_print(f'BFS Node Limit Reached')
+                return None, nodes_expanded
 
             if search_type == 'graph':
                 if current_id in closed_set:
@@ -77,7 +86,7 @@ class SearchPlanner:
                             continue
 
                         queue.append(neighbour)
-        return None
+        return None, 0
 
     # to add later
     def planning_dfs(self, start_x, start_y, goal_x, goal_y, search_type='graph'):
@@ -91,12 +100,12 @@ class SearchPlanner:
         visited_nodes = {}
         closed_set = set()
 
-        attempt = 0
+        nodes_expanded = 0
 
         while queue:
 
-            attempt += 1
-            # print(f"Attempt {attempt}")
+            nodes_expanded += 1
+            self.debug_print(f'DFS {search_type} {nodes_expanded}')
 
             parent = queue.pop()
             parent_id = self.calculate_grid_index(parent)
@@ -109,7 +118,11 @@ class SearchPlanner:
             if parent == goal_node:
                 route_x, route_y = self.calculate_final_path(parent)
                 path = [(route_x[i], route_y[i]) for i in range(len(route_x))]
-                return path
+                return path, nodes_expanded
+
+            if nodes_expanded > NODES_EXPANSION_LIMIT:
+                self.debug_print(f'DFS Node Limit Reached')
+                return None, nodes_expanded
 
             closed_set.add(parent_id)
 
@@ -137,7 +150,7 @@ class SearchPlanner:
                 queue.append(child)
                 open_set_store.add(child_id)
 
-        return None
+        return None, 0
 
     def planning_ucs(self, start_x, start_y, goal_x, goal_y, search_type='graph'):
         start_node = self.Node(start_x, start_y, 0.0, -1, None)
@@ -154,11 +167,11 @@ class SearchPlanner:
         # open_set[self.calculate_grid_index(start_node)] = start_node
         lookup_dict[self.calculate_grid_index(start_node)] = start_node
 
-        attempt = 0
+        nodes_expanded = 0
 
         while p_queue:
-            attempt += 1
-            # print(f"Attempt {attempt}")
+            nodes_expanded += 1
+            self.debug_print(f'UCS {search_type} {nodes_expanded}')
 
             _, parent_id, parent = heapq.heappop(p_queue)
 
@@ -170,7 +183,11 @@ class SearchPlanner:
             if parent == goal_node:
                 route_x, route_y = self.calculate_final_path(parent)
                 path = [(route_x[i], route_y[i]) for i in range(len(route_x))]
-                return path
+                return path, nodes_expanded
+
+            if nodes_expanded > NODES_EXPANSION_LIMIT:
+                self.debug_print(f'UCS Node Limit Reached')
+                return None, nodes_expanded
 
             # del open_set[parent_id]
 
@@ -207,7 +224,7 @@ class SearchPlanner:
                     lookup_dict[child_id] = child
                     continue
 
-        return None
+        return None, 0
 
     def planning_astar(self, start_x, start_y, goal_x, goal_y, heuristic_type='euclidean', search_type='graph'):
         start_node = self.Node(start_x, start_y, 0.0, -1, None)
@@ -230,7 +247,11 @@ class SearchPlanner:
 
         visited_nodes = {start_id: start_node}
 
+        nodes_expanded = 0
+
         while priority_queue:
+            nodes_expanded += 1
+            self.debug_print(f'A* {search_type} {nodes_expanded}')
 
             # so this the main optimisation with heapq, instead of me using lambda with min every time which is
             # O(n), this does is O(log(n)) by popping the smallest value, and ignoring the first value which is the f(x)
@@ -252,6 +273,10 @@ class SearchPlanner:
                 goal_node = current
                 visited_nodes[current_id] = current
                 break
+
+            if nodes_expanded > NODES_EXPANSION_LIMIT:
+                self.debug_print(f'A* Node Limit Reached')
+                return None, nodes_expanded
 
             for change_x, change_y, cost in self.motion:
                 next_x = current.x + change_x
@@ -297,7 +322,7 @@ class SearchPlanner:
         route_x, route_y = self.calculate_final_path(goal_node)
         path = [(route_x[i], route_y[i]) for i in range(len(route_x))]
 
-        return path
+        return path, nodes_expanded
 
     # Checks if the child node has already been in the current path of the parent if so its a loopt(true)
     def is_tree_looping(self, parent, child):
@@ -306,6 +331,11 @@ class SearchPlanner:
                 return True
             parent = parent.parent
         return False
+
+    #Prints Debugging Messages If want to debug
+    def debug_print(self, text):
+        if DEBUG_FLAG:
+            print(text)
 
     # will be used later, similar to lab files
     def calculate_heuristic(self, current_node, goal_node, heuristic_type='euclidean'):
