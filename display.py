@@ -8,7 +8,7 @@ import tracemalloc
 import seaborn as sns
 from algorithms import SearchPlanner
 
-from maze_generate import maze_generate, Maze
+from maze_generate import maze_generate
 
 # Simplest way to run on Macs
 matplotlib.use('MacOSX')
@@ -72,23 +72,23 @@ class AnimatedSearch:
     def setup_plot(self):
         self.ax.set_xlim(-1, self.width)
         self.ax.set_ylim(-1, self.height)
-        self.ax.grid(True)
+        self.ax.grid(False)
         self.ax.set_aspect('equal')
 
         grid = np.array(self.obstacle_map)
 
         empty_y, empty_x = np.where(~grid)
-        self.ax.scatter(empty_x, empty_y, s=300, c='blue',
+        self.ax.scatter(empty_x, empty_y, s=300, c='white',
                         marker='s', edgecolors='black')
 
         obstacle_y, obstacle_x = np.where(grid)
-        self.ax.scatter(obstacle_x, obstacle_y, s=300, c='gray',
+        self.ax.scatter(obstacle_x, obstacle_y, s=300, c='black',
                         marker='s')
 
         self.ax.scatter(self.start[0], self.start[1], s=400,
-                        c='green', marker='s', edgecolors='black', label='Start')
+                        c='blue', marker='s', edgecolors='black', label='Start')
         self.ax.scatter(self.goal[0], self.goal[1], s=400,
-                        c='red', marker='s', edgecolors='black', label='Goal')
+                        c='green', marker='s', edgecolors='black', label='Goal')
 
         # possibly add this as global const, will see later
         algorithm_titles = {'1': 'BFS', '2': 'DFS', '3': 'UCS', '4': 'A*'}
@@ -103,9 +103,10 @@ class AnimatedSearch:
         # a way to track performance, need to add onto it later
         tracemalloc.start()
 
-        path, nodes_expanded = chosen_algorithm(self.start[0], self.start[1],
-                                                self.goal[0], self.goal[1],
-                                                search_type=self.search_type)
+        path, nodes_expanded, visited_nodes = chosen_algorithm(self.start[0], self.start[1],
+                                                               self.goal[0], self.goal[1],
+                                                               search_type=self.search_type,
+                                                               show_animation=self.show_animation)
 
         # fault check
         if path is None and self.show_animation:
@@ -119,7 +120,11 @@ class AnimatedSearch:
         if not self.show_animation:
             return path, memory, nodes_expanded
 
-        print(f"Peak memory usage: {memory}")
+        if visited_nodes:
+            for node_id, node in visited_nodes.items():
+                if (node.x, node.y) != (self.start[0], self.start[1]) and (node.x, node.y) != (self.goal[0], self.goal[1]):
+                    self.ax.scatter(node.x, node.y, s=300, c='grey', marker='s', edgecolors='black', alpha=0.5)
+                    plt.pause(0.05)
 
         location_x = [coord[0] for coord in path]
         location_y = [coord[1] for coord in path]
@@ -128,14 +133,16 @@ class AnimatedSearch:
             for i in range(len(location_x) - 1):
                 path_x = (location_x[i], location_x[i + 1])
                 path_y = (location_y[i], location_y[i + 1])
-                plt.plot(path_x, path_y, "-y", linewidth=4)
+                plt.plot(path_x, path_y, c='red', linewidth=4)
                 plt.pause(pause_time)
+
+        print(f"Peak memory usage: {memory}")
 
         return path, memory, nodes_expanded
 
 
 def run_search(search_algorithm, search_type, show_animation=True,
-               maze=maze_generate(20, 0.5, random_seed=random_seed)):
+               maze=maze_generate(20, 0.1, random_seed=random_seed)):
     # Need a lot of visualisation fixes if the maze becomes big, then need a for loop
     # you can change the approximate start/goal position
     # (1 - bottom left; 2 - top left; 3 - bottom right; 4 - top right; 5 - centre, empty - random)
@@ -154,24 +161,24 @@ def run_search(search_algorithm, search_type, show_animation=True,
     path, memory, nodes_expanded = animated.search_with_animation()
     elapsed_time = time.time() - start_time
 
-    # To Test Only
-    # maze.save_maze()
+    maze.save_maze()
 
     return elapsed_time, path, memory, nodes_expanded
 
 
-def display_maze(search_algorithm, search_type, displayPlot=True):
+def display_maze(search_algorithm, search_type, display_plot=True):
     try:
         elapsed_time, path, memory, nodes_expanded = run_search(search_algorithm, search_type)
 
         if path:
             print(f"Path length: {len(path)} steps")
             print(f"Total cost: {get_cost(path)}")
+            print(f"Total Expanded Nodes: {nodes_expanded}")
             print(f"Time: {elapsed_time}s")
         else:
             print("Unable to find a path")
 
-        if displayPlot:
+        if display_plot:
             plt.legend()
             plt.show()
 
