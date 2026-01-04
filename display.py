@@ -15,6 +15,7 @@ matplotlib.use('MacOSX')
 
 show_animation = True
 pause_time = 0.2
+random_seed = 1234
 
 algorithm_titles = {'1': 'BFS', '2': 'DFS', '3': 'UCS', '4': 'A*'}
 search_type_titles = {'1': 'tree', '2': 'graph'}
@@ -133,7 +134,8 @@ class AnimatedSearch:
         return path, memory, nodes_expanded
 
 
-def run_search(search_algorithm, search_type, show_animation=True, maze=maze_generate(20, 0.5, random_seed=1234)):
+def run_search(search_algorithm, search_type, show_animation=True,
+               maze=maze_generate(20, 0.5, random_seed=random_seed)):
     # Need a lot of visualisation fixes if the maze becomes big, then need a for loop
     # you can change the approximate start/goal position
     # (1 - bottom left; 2 - top left; 3 - bottom right; 4 - top right; 5 - centre, empty - random)
@@ -190,12 +192,13 @@ def results_iterator(mazes, search_types=('1', '2'), algorithms_types=('1', '2',
                     elapsed_time, path, memory, nodes_expanded = run_search(algorithm, search, False, maze)
                     path_length = len(path) if path is not None else np.nan
                     search_results.append((algorithm, search, elapsed_time, path_length, nodes_expanded, memory[1],
-                                           maze.size, maze.density, maze.start_reigon, maze.goal_reigon, maze))
+                                           maze.size, maze.density, maze.start_reigon, maze.goal_reigon, random_seed,
+                                           maze))
 
         results_df = pd.DataFrame(search_results,
                                   columns=['Search_Algorithm', 'Search_Type', 'Time', 'Path_Size', 'Num_Nodes_Expanded',
                                            'Peak_Memory_Usage', 'Maze_Size', 'Maze_Density', 'Start_Region',
-                                           'Goal_Region', 'Maze_Object'])
+                                           'Goal_Region', 'Random_Seed', 'Maze_Object'])
 
         results_df['Algorithm_And_Search_Name'] = results_df["Search_Type"].map(search_type_titles) + '_' + results_df[
             "Search_Algorithm"].map(algorithm_titles)
@@ -205,8 +208,7 @@ def results_iterator(mazes, search_types=('1', '2'), algorithms_types=('1', '2',
         results_df = results_df[
             ['Algorithm_And_Search_Name', 'Maze_Size', 'Maze_Density', 'Path_Size', 'Num_Nodes_Expanded', 'Time',
              'Peak_Memory_Usage', 'Start_Region', 'Goal_Region', 'Search_Type', 'Search_Algorithm', 'Search_Type_Name',
-             'Search_Algorithm_Name', 'Maze_Object']]
-
+             'Search_Algorithm_Name', 'Random_Seed', 'Maze_Object']]
 
     except Exception as e:
         print(f"Error: {e}")
@@ -214,10 +216,10 @@ def results_iterator(mazes, search_types=('1', '2'), algorithms_types=('1', '2',
     return results_df
 
 
-def create_maze_list(sizes, densitys, regions, random_seed=81):
+def create_maze_list(sizes, densities, regions, random_seed=random_seed):
     maze_list = []
     for size in sizes:
-        for density in densitys:
+        for density in densities:
             for start_region in regions:
                 for end_region in regions:
                     if start_region == end_region:

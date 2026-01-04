@@ -324,16 +324,18 @@ class SearchPlanner:
 
         return path, nodes_expanded
 
-    # Checks if the child node has already been in the current path of the parent if so its a loopt(true)
-    def is_tree_looping(self, parent, child):
+    # Checks if the child node has already been in the current path of the parent if so its a loop(true)
+    @staticmethod
+    def is_tree_looping(parent, child):
         while parent.parent is not None:
             if parent.parent == child:
                 return True
             parent = parent.parent
         return False
 
-    #Prints Debugging Messages If want to debug
-    def debug_print(self, text):
+    # Prints Debugging Messages If want to debug
+    @staticmethod
+    def debug_print(text):
         if DEBUG_FLAG:
             print(text)
 
