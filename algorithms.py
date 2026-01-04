@@ -2,7 +2,7 @@ import math
 from collections import deque
 import heapq
 
-DEBUG_FLAG = True
+DEBUG_FLAG = False
 NODES_EXPANSION_LIMIT = 200_000
 
 

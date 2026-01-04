@@ -14,7 +14,7 @@ from maze_generate import maze_generate
 matplotlib.use('MacOSX')
 
 show_animation = True
-pause_time = 0.2
+pause_time = 0.05
 random_seed = 1234
 
 algorithm_titles = {'1': 'BFS', '2': 'DFS', '3': 'UCS', '4': 'A*'}
@@ -124,7 +124,7 @@ class AnimatedSearch:
             for node_id, node in visited_nodes.items():
                 if (node.x, node.y) != (self.start[0], self.start[1]) and (node.x, node.y) != (self.goal[0], self.goal[1]):
                     self.ax.scatter(node.x, node.y, s=300, c='grey', marker='s', edgecolors='black', alpha=0.5)
-                    plt.pause(0.05)
+                    plt.pause(pause_time)
 
         location_x = [coord[0] for coord in path]
         location_y = [coord[1] for coord in path]
@@ -161,7 +161,7 @@ def run_search(search_algorithm, search_type, show_animation=True,
     path, memory, nodes_expanded = animated.search_with_animation()
     elapsed_time = time.time() - start_time
 
-    maze.save_maze()
+    # maze.save_maze()
 
     return elapsed_time, path, memory, nodes_expanded
 
