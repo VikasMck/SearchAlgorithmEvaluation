@@ -31,17 +31,16 @@ class Maze:
         fig, ax = plt.subplots(figsize=fig_size)
         ax.set_xlim(-1, width)
         ax.set_ylim(-1, height)
-        ax.grid(True)
         ax.set_aspect('equal')
 
         grid = np.array(obstacle_map)
 
         empty_y, empty_x = np.where(~grid)
-        ax.scatter(empty_x, empty_y, s=300, c='blue',
+        ax.scatter(empty_x, empty_y, s=300, c='white',
                    marker='s', edgecolors='black')
 
         obstacle_y, obstacle_x = np.where(grid)
-        ax.scatter(obstacle_x, obstacle_y, s=300, c='gray',
+        ax.scatter(obstacle_x, obstacle_y, s=300, c='black',
                    marker='s')
 
         ax.scatter(self.maze_start[0], self.maze_start[1], s=400,

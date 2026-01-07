@@ -3,7 +3,8 @@ from collections import deque
 import heapq
 
 DEBUG_FLAG = False
-NODES_EXPANSION_LIMIT = 200_000
+# use 200,000 for normal df result generation, this is for test
+NODES_EXPANSION_LIMIT = 200_000_0
 
 
 # making a general class for all algorithms, similar to lab notes
@@ -78,7 +79,6 @@ class SearchPlanner:
                         neighbour = self.Node(next_x, next_y, current.cost + cost, current_id, current)
                         neighbour_id = self.calculate_grid_index(neighbour)
 
-                        # tree needs fixing, either it gets stuck on infinite loop and return None, or other issues
                         if (search_type == 'tree') and (self.is_tree_looping(current, neighbour)):
                             continue
 

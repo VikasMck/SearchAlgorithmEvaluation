@@ -15,7 +15,7 @@ matplotlib.use('MacOSX')
 
 show_animation = True
 pause_time = 0.05
-random_seed = 1234
+random_seed = 51
 
 algorithm_titles = {'1': 'BFS', '2': 'DFS', '3': 'UCS', '4': 'A*'}
 search_type_titles = {'1': 'tree', '2': 'graph'}
@@ -142,7 +142,7 @@ class AnimatedSearch:
 
 
 def run_search(search_algorithm, search_type, show_animation=True,
-               maze=maze_generate(20, 0.1, random_seed=random_seed)):
+               maze=maze_generate(14, 0.26, random_seed=random_seed, start_region_input=1, goal_region_input=4)):
     # Need a lot of visualisation fixes if the maze becomes big, then need a for loop
     # you can change the approximate start/goal position
     # (1 - bottom left; 2 - top left; 3 - bottom right; 4 - top right; 5 - centre, empty - random)
@@ -156,12 +156,13 @@ def run_search(search_algorithm, search_type, show_animation=True,
                               {'1': 'tree', '2': 'graph'}.get(search_type),
                               fig_dim, show_animation=show_animation)
 
+    maze.save_maze()
+
     # another measure to count performance
     start_time = time.time()
     path, memory, nodes_expanded = animated.search_with_animation()
     elapsed_time = time.time() - start_time
 
-    # maze.save_maze()
 
     return elapsed_time, path, memory, nodes_expanded
 
@@ -252,7 +253,7 @@ def graph_results():
 
     results_df = results_iterator(mazes)
 
-    results_df.to_csv('results_df.csv', index=False)
+    results_df.to_csv('results_df_8n.csv', index=False)
 
     # print(results_df['Algorithm_Name'])
     # print(results_df.describe())
