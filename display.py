@@ -81,7 +81,7 @@ class AnimatedSearch:
                         marker='s', edgecolors='black')
 
         water_y, water_x = np.where(grid == 2)
-        self.ax.scatter(water_x, water_y, s=300, c='darkblue',
+        self.ax.scatter(water_x, water_y, s=300, c='cyan',
                         marker='s', edgecolors='black')
 
         obstacle_y, obstacle_x = np.where(grid == 1)
@@ -166,7 +166,7 @@ def run_search(search_algorithm, search_type, show_animation=True,
     path, memory, nodes_expanded = animated.search_with_animation()
     elapsed_time = time.time() - start_time
 
-    return elapsed_time, path, memory, nodes_expanded
+    return elapsed_time, path, memory, nodes_expanded, obstacle_map
 
 
 def display_maze(search_algorithm, search_type, display_plot=True):
@@ -215,7 +215,7 @@ def results_iterator(mazes, search_types=('1', '2'), algorithms_types=('1', '2',
         for algorithm in algorithms_types:
             for search in search_types:
                 for maze in mazes:
-                    elapsed_time, path, memory, nodes_expanded = run_search(algorithm, search, False, maze)
+                    elapsed_time, path, memory, nodes_expanded, _ = run_search(algorithm, search, False, maze)
                     path_length = len(path) if path is not None else np.nan
                     search_results.append((algorithm, search, elapsed_time, path_length, nodes_expanded, memory[1],
                                            maze.size, maze.obstacle_density, maze.water_density, maze.start_region, maze.goal_region, random_seed,

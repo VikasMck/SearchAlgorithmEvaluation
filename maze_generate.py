@@ -41,7 +41,7 @@ class Maze:
                    marker='s', edgecolors='black')
 
         water_y, water_x = np.where(grid == 2)
-        ax.scatter(water_x, water_y, s=300, c='darkblue',
+        ax.scatter(water_x, water_y, s=300, c='cyan',
                    marker='s', edgecolors='black')
 
         obstacle_y, obstacle_x = np.where(grid == 1)
