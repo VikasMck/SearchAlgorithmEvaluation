@@ -140,24 +140,60 @@ def node_analysis_plot(results_data):
     plt.tight_layout()
     plt.show()
 
+def algorithm_peak_storage_plot(results_data):
+    fig, axes = plt.subplots(1, 2, figsize=(15, 10))
+    fig.suptitle('Peak Memory Usage Per Algorithm (Graph v Tree)', fontsize=15, fontweight='bold')
+
+    for column, search_type in enumerate(['graph', 'tree']):
+        data = results_data[results_data['Search_Type_Name'] == search_type]
+
+        means = data.groupby('Search_Algorithm_Name')['Peak_Memory_Usage'].mean()
+
+        sns.barplot(x='Search_Algorithm_Name', y='Peak_Memory_Usage', data=data, ax=axes[column],estimator='mean', color='blue' if search_type == 'graph' else 'green')
+        axes[column].set_title(f'{search_type.upper()}: Size')
+
+        axes[column].set_xlabel('Search Algorithm')
+        axes[column].set_ylabel('Peak Memory Usage (Bytes)')
+        axes[column].tick_params(axis='x', rotation=45, labelsize=10)
+        plt.yticks(sorted(means.values))
+
+
+    plt.tight_layout()
+    plt.show()
+
+def path_expanded_Memory_Usage_plot(results_data):
+    fig, axes = plt.subplots(1, 2, figsize=(15, 10))
+    fig.suptitle('Path Expanded Memory Usage Per Algorithm (Graph v Tree)', fontsize=15, fontweight='bold')
+
+    for column, search_type in enumerate(['graph', 'tree']):
+        data = results_data[results_data['Search_Type_Name'] == search_type]
+
+        sns.scatterplot(x = 'Num_Nodes_Expanded', y= 'Peak_Memory_Usage', data=data ,hue='Algorithm_And_Search_Name',ax=axes[column])
+        axes[column].set_xlabel('Num Nodes Expanded')
+        axes[column].set_ylabel('Peak Memory Usage (Bytes)')
+
+    plt.tight_layout()
+    plt.show()
+
+
 
 if __name__ == '__main__':
     results_df = pd.read_csv('results_df.csv')
     graphs_functions = [algorithm_average_time_plot, maze_size_affect_plot, maze_density_affect_plot,
-                        algorithms_per_density_size_plot, start_to_goal_performance_plot, node_analysis_plot]
+                        algorithms_per_density_size_plot, start_to_goal_performance_plot, node_analysis_plot, algorithm_peak_storage_plot, path_expanded_Memory_Usage_plot]
     graphs_names = ['Average Time Per Algorithm (Line)', 'How Size Effects (Line)', 'How Density Effects (Line)',
-                    'Density and Size (Bar)', 'Start to Goal Combinations (Bar)', 'Nodes per Time (Scatter)']
+                    'Density and Size (Bar)', 'Start to Goal Combinations (Bar)', 'Nodes per Time (Scatter)', 'Peak Memory Usage (Bar)','Path Expanded To Memory Usage (Scatter)']
 
     while True:
         for i, name in enumerate(graphs_names, 1):
             print(f"{i}. {name}")
-        print("7. Exit")
+        print("9. Exit")
 
-        choice = input("\nPick 1-7: ").strip()
+        choice = input("\nPick 1-9: ").strip()
 
-        if choice == '7':
+        if choice == '9':
             break
-        elif choice.isdigit() and 1 <= int(choice) <= 6:
+        elif choice.isdigit() and 1 <= int(choice) <= 8:
             graphs_functions[int(choice) - 1](results_df)
         else:
             print("Wrong input")
