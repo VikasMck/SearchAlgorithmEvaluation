@@ -77,21 +77,21 @@ class AnimatedSearch:
         grid = np.array(self.obstacle_map)
 
         empty_y, empty_x = np.where(grid == 0)
-        self.ax.scatter(empty_x, empty_y, s=300, c='white',
+        self.ax.scatter(empty_x, empty_y, s=350, c='white',
                         marker='s', edgecolors='black')
 
         water_y, water_x = np.where(grid == 2)
-        self.ax.scatter(water_x, water_y, s=300, c='cyan',
-                        marker='s', edgecolors='black')
+        self.ax.scatter(water_x, water_y, s=350, c='cyan',
+                        marker='s', edgecolors='black', label='Water')
 
         obstacle_y, obstacle_x = np.where(grid == 1)
-        self.ax.scatter(obstacle_x, obstacle_y, s=300, c='black',
+        self.ax.scatter(obstacle_x, obstacle_y, s=350, c='black',
                         marker='s')
 
-        self.ax.scatter(self.start[0], self.start[1], s=400,
+        self.ax.scatter(self.start[0], self.start[1], s=350,
                         c='blue', marker='s', edgecolors='black', label='Start')
-        self.ax.scatter(self.goal[0], self.goal[1], s=400,
-                        c='green', marker='s', edgecolors='black', label='Goal')
+        self.ax.scatter(self.goal[0], self.goal[1], s=350,
+                        c='lightgreen', marker='s', edgecolors='black', label='Goal')
 
         # possibly add this as global const, will see later
         algorithm_titles = {'1': 'BFS', '2': 'DFS', '3': 'UCS', '4': 'A*'}

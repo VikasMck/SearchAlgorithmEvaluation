@@ -37,20 +37,20 @@ class Maze:
         grid = np.array(obstacle_map)
 
         empty_y, empty_x = np.where(grid == 0)
-        ax.scatter(empty_x, empty_y, s=300, c='white',
+        ax.scatter(empty_x, empty_y, s=350, c='white',
                    marker='s', edgecolors='black')
 
         water_y, water_x = np.where(grid == 2)
-        ax.scatter(water_x, water_y, s=300, c='cyan',
+        ax.scatter(water_x, water_y, s=350, c='cyan',
                    marker='s', edgecolors='black')
 
         obstacle_y, obstacle_x = np.where(grid == 1)
-        ax.scatter(obstacle_x, obstacle_y, s=300, c='black',
+        ax.scatter(obstacle_x, obstacle_y, s=350, c='black',
                    marker='s')
 
-        ax.scatter(self.maze_start[0], self.maze_start[1], s=400,
+        ax.scatter(self.maze_start[0], self.maze_start[1], s=350,
                    c='green', marker='s', edgecolors='black', label='Start')
-        ax.scatter(self.maze_goal[0], self.maze_goal[1], s=400,
+        ax.scatter(self.maze_goal[0], self.maze_goal[1], s=350,
                    c='red', marker='s', edgecolors='black', label='Goal')
 
         ax.legend()
