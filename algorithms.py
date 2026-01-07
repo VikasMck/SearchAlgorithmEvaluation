@@ -2,7 +2,7 @@ import math
 from collections import deque
 import heapq
 
-DEBUG_FLAG = True
+DEBUG_FLAG = False
 NODES_EXPANSION_LIMIT = 200_000
 
 
@@ -34,7 +34,7 @@ class SearchPlanner:
             return self.x == other.x and self.y == other.y
 
     # plannings
-    def planning_bfs(self, start_x, start_y, goal_x, goal_y, search_type='graph'):
+    def planning_bfs(self, start_x, start_y, goal_x, goal_y, search_type='graph', show_animation=False):
         start_node = self.Node(start_x, start_y, 0.0, -1, None)
         goal_node = self.Node(goal_x, goal_y, 0.0, -1, None)
         nodes_expanded = 0
@@ -57,11 +57,11 @@ class SearchPlanner:
             if (current.x, current.y) == (goal_node.x, goal_node.y):
                 route_x, route_y = self.calculate_final_path(current)
                 path = [(route_x[i], route_y[i]) for i in range(len(route_x))]
-                return path, nodes_expanded
+                return path, nodes_expanded, visited_nodes
 
             if nodes_expanded > NODES_EXPANSION_LIMIT:
                 self.debug_print(f'BFS Node Limit Reached')
-                return None, nodes_expanded
+                return None, nodes_expanded, visited_nodes
 
             if search_type == 'graph':
                 if current_id in closed_set:
@@ -86,10 +86,10 @@ class SearchPlanner:
                             continue
 
                         queue.append(neighbour)
-        return None, 0
+        return None, 0, visited_nodes
 
     # to add later
-    def planning_dfs(self, start_x, start_y, goal_x, goal_y, search_type='graph'):
+    def planning_dfs(self, start_x, start_y, goal_x, goal_y, search_type='graph', show_animation=False):
         start_node = self.Node(start_x, start_y, 0.0, -1, None)
         goal_node = self.Node(goal_x, goal_y, 0.0, -1, None)
 
@@ -118,11 +118,11 @@ class SearchPlanner:
             if parent == goal_node:
                 route_x, route_y = self.calculate_final_path(parent)
                 path = [(route_x[i], route_y[i]) for i in range(len(route_x))]
-                return path, nodes_expanded
+                return path, nodes_expanded, visited_nodes
 
             if nodes_expanded > NODES_EXPANSION_LIMIT:
                 self.debug_print(f'DFS Node Limit Reached')
-                return None, nodes_expanded
+                return None, nodes_expanded, visited_nodes
 
             closed_set.add(parent_id)
 
@@ -150,9 +150,9 @@ class SearchPlanner:
                 queue.append(child)
                 open_set_store.add(child_id)
 
-        return None, 0
+        return None, 0, visited_nodes
 
-    def planning_ucs(self, start_x, start_y, goal_x, goal_y, search_type='graph'):
+    def planning_ucs(self, start_x, start_y, goal_x, goal_y, search_type='graph', show_animation=False):
         start_node = self.Node(start_x, start_y, 0.0, -1, None)
         goal_node = self.Node(goal_x, goal_y, 0.0, -1, None)
 
@@ -183,11 +183,11 @@ class SearchPlanner:
             if parent == goal_node:
                 route_x, route_y = self.calculate_final_path(parent)
                 path = [(route_x[i], route_y[i]) for i in range(len(route_x))]
-                return path, nodes_expanded
+                return path, nodes_expanded, visited_nodes
 
             if nodes_expanded > NODES_EXPANSION_LIMIT:
                 self.debug_print(f'UCS Node Limit Reached')
-                return None, nodes_expanded
+                return None, nodes_expanded, visited_nodes
 
             # del open_set[parent_id]
 
@@ -224,9 +224,9 @@ class SearchPlanner:
                     lookup_dict[child_id] = child
                     continue
 
-        return None, 0
+        return None, 0, visited_nodes
 
-    def planning_astar(self, start_x, start_y, goal_x, goal_y, heuristic_type='euclidean', search_type='graph'):
+    def planning_astar(self, start_x, start_y, goal_x, goal_y, heuristic_type='euclidean', search_type='graph', show_animation=False):
         start_node = self.Node(start_x, start_y, 0.0, -1, None)
         goal_node = self.Node(goal_x, goal_y, 0.0, -1, None)
 
@@ -276,7 +276,7 @@ class SearchPlanner:
 
             if nodes_expanded > NODES_EXPANSION_LIMIT:
                 self.debug_print(f'A* Node Limit Reached')
-                return None, nodes_expanded
+                return None, nodes_expanded, visited_nodes
 
             for change_x, change_y, cost in self.motion:
                 next_x = current.x + change_x
@@ -322,18 +322,20 @@ class SearchPlanner:
         route_x, route_y = self.calculate_final_path(goal_node)
         path = [(route_x[i], route_y[i]) for i in range(len(route_x))]
 
-        return path, nodes_expanded
+        return path, nodes_expanded, visited_nodes
 
-    # Checks if the child node has already been in the current path of the parent if so its a loopt(true)
-    def is_tree_looping(self, parent, child):
+    # Checks if the child node has already been in the current path of the parent if so its a loop(true)
+    @staticmethod
+    def is_tree_looping(parent, child):
         while parent.parent is not None:
             if parent.parent == child:
                 return True
             parent = parent.parent
         return False
 
-    #Prints Debugging Messages If want to debug
-    def debug_print(self, text):
+    # Prints Debugging Messages If want to debug
+    @staticmethod
+    def debug_print(text):
         if DEBUG_FLAG:
             print(text)
 

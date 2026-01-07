@@ -5,11 +5,12 @@ def print_main_menu():
     print("2. DFS")
     print("3. UCS")
     print("4. A*")
-    print("5. Exit")
+    print("5. Run Analysis")
+    print("6. Exit")
 
     while True:
-        user_input = input("Enter your user_input (1-5): ").strip()
-        if user_input in ('1', '2', '3', '4', '5','6'):
+        user_input = input("Enter your user_input (1-6): ").strip()
+        if user_input in ('1', '2', '3', '4', '5', '6'):
             return user_input
         print("Please enter a number between 1 and 5.")
 

@@ -7,11 +7,11 @@ def main():
         search_algorithm = print_main_menu()
 
         if search_algorithm == '5':
-            print("Exiting program.")
-            break
+            graph_results()
 
         if search_algorithm == '6':
-            graph_results()
+            print("Exiting program.")
+            break
 
         search_type = print_tree_graph_menu()
 
