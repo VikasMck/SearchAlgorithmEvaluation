@@ -80,8 +80,8 @@ def algorithms_per_density_size_plot(results_data):
         axes[column, 0].legend(fontsize=10)
         axes[column, 0].tick_params(axis='x', rotation=45, labelsize=10)
 
-        density = data.groupby(['Maze_Density', 'Search_Algorithm_Name'])['Time'].mean().unstack()
-        density.plot(kind='bar', ax=axes[column, 1])
+        obstacle_density = data.groupby(['Maze_Density', 'Search_Algorithm_Name'])['Time'].mean().unstack()
+        obstacle_density.plot(kind='bar', ax=axes[column, 1])
         axes[column, 1].set_title(f'{search_type.upper()}: Density')
         axes[column, 1].set_xlabel('Maze Density')
         axes[column, 1].set_ylabel('Time (seconds)')

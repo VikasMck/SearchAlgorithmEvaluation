@@ -16,18 +16,19 @@ class Maze:
     maze_start: tuple[int, int]
     maze_goal: tuple[int, int]
     size: int
-    density: float
-    start_reigon: int
-    goal_reigon: int
+    obstacle_density: float
+    water_density: float
+    start_region: int
+    goal_region: int
 
     def get_obstacle_map(self):
         data = pd.DataFrame(self.generated_maze)
-        return [[bool(data[index_x][index_y]) for index_y in range(data.shape[0])]
+        return [[data[index_x][index_y] for index_y in range(data.shape[0])]
                 for index_x in range(data.shape[1])]
 
     def save_maze(self, fig_size=(10, 10), filename='maze.png', title='Maze'):
         obstacle_map = self.get_obstacle_map()
-        width, height = len(obstacle_map[1]), len(obstacle_map[0])
+        width, height = len(obstacle_map), len(obstacle_map[0])
         fig, ax = plt.subplots(figsize=fig_size)
         ax.set_xlim(-1, width)
         ax.set_ylim(-1, height)
@@ -35,11 +36,15 @@ class Maze:
 
         grid = np.array(obstacle_map)
 
-        empty_y, empty_x = np.where(~grid)
+        empty_y, empty_x = np.where(grid == 0)
         ax.scatter(empty_x, empty_y, s=300, c='white',
                    marker='s', edgecolors='black')
 
-        obstacle_y, obstacle_x = np.where(grid)
+        water_y, water_x = np.where(grid == 2)
+        ax.scatter(water_x, water_y, s=300, c='darkblue',
+                   marker='s', edgecolors='black')
+
+        obstacle_y, obstacle_x = np.where(grid == 1)
         ax.scatter(obstacle_x, obstacle_y, s=300, c='black',
                    marker='s')
 
@@ -55,7 +60,7 @@ class Maze:
         plt.close(fig)
 
 
-def maze_generate(maze_size, maze_density=None, start_region_input=None, goal_region_input=None, random_seed=None):
+def maze_generate(maze_size, maze_density=None, water_density=None, start_region_input=None, goal_region_input=None, random_seed=None):
     # Included this to make the mazes reproducible for testing and also visual purposes
     if random_seed is not None:
         random.seed(random_seed)
@@ -71,6 +76,23 @@ def maze_generate(maze_size, maze_density=None, start_region_input=None, goal_re
     for i in range(1, maze_size - 1):
         for j in range(1, maze_size - 1):
             generated_maze[i][j] = 0
+
+    # adding same logic for water as I have done for maze objects. Just copy to save time
+    if water_density is None:
+        maze_type = random.randint(1, 3)
+        if maze_type == 1:
+            water_block_density = random.uniform(0.5, 0.20)
+        elif maze_type == 2:
+            water_block_density = random.uniform(0.20, 0.35)
+        else:
+            water_block_density = random.uniform(0.35, 0.55)
+    else:
+        water_block_density = water_density
+    for i in range(1, maze_size - 1):
+        for j in range(1, maze_size - 1):
+            if random.random() < water_block_density:
+                generated_maze[i][j] = 2
+
 
     # this I made so there's randomness in maze vastness, and went down a rabbit hole of learning
     # about percolation theory in 2d mazes where after 0.59 threshold mazes are rare to be possible.
@@ -177,7 +199,7 @@ def maze_generate(maze_size, maze_density=None, start_region_input=None, goal_re
                 next_x, next_y = current.x + change_x, current.y + change_y
 
                 if 0 <= next_x < maze_size and 0 <= next_y < maze_size:
-                    if generated_maze[next_y][next_x] == 0:
+                    if generated_maze[next_y][next_x] != 1:
                         neighbour = Node(next_x, next_y, current_id)
                         neighbour_id = calculate_grid_index(neighbour)
                         if neighbour_id not in closed_set:
@@ -212,7 +234,7 @@ def maze_generate(maze_size, maze_density=None, start_region_input=None, goal_re
 
         generated_maze[maze_goal[0]][maze_goal[1]] = 0
 
-    return Maze(generated_maze, maze_start, maze_goal, maze_size, maze_density, start_region_input, goal_region_input)
+    return Maze(generated_maze, maze_start, maze_goal, maze_size, maze_density, water_density, start_region_input, goal_region_input)
 
 
 def print_maze(generated_maze, maze_start, maze_goal):

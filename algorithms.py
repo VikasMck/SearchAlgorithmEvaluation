@@ -4,7 +4,7 @@ import heapq
 
 DEBUG_FLAG = False
 # use 200,000 for normal df result generation, this is for test
-NODES_EXPANSION_LIMIT = 200_000_0
+NODES_EXPANSION_LIMIT = 200_000
 
 
 # making a general class for all algorithms, similar to lab notes
@@ -33,6 +33,11 @@ class SearchPlanner:
 
         def __eq__(self, other):
             return self.x == other.x and self.y == other.y
+
+    # since I added water
+    def get_cell_cost(self, x, y):
+        cell_value = self.obstacle_map[y][x]
+        return 3 if cell_value == 2 else 1
 
     # plannings
     def planning_bfs(self, start_x, start_y, goal_x, goal_y, search_type='graph', show_animation=False):
@@ -75,8 +80,10 @@ class SearchPlanner:
 
                 # boundaries + obstacles checking
                 if self.min_x <= next_x <= self.max_x and self.min_y <= next_y <= self.max_y:
-                    if not self.obstacle_map[next_y][next_x]:
-                        neighbour = self.Node(next_x, next_y, current.cost + cost, current_id, current)
+                    cell_value = self.obstacle_map[next_y][next_x]
+                    if cell_value != 1:
+                        move_cost = self.get_cell_cost(next_x, next_y)
+                        neighbour = self.Node(next_x, next_y, current.cost + move_cost, current_id, current)
                         neighbour_id = self.calculate_grid_index(neighbour)
 
                         if (search_type == 'tree') and (self.is_tree_looping(current, neighbour)):
@@ -132,10 +139,12 @@ class SearchPlanner:
                 if not (self.min_x <= next_x <= self.max_x and self.min_y <= next_y <= self.max_y):
                     continue
 
-                if self.obstacle_map[next_y][next_x]:
+                cell_value = self.obstacle_map[next_y][next_x]
+                if cell_value == 1:
                     continue
 
-                child = self.Node(next_x, next_y, parent.cost + cost, parent_id, parent)
+                move_cost = self.get_cell_cost(next_x, next_y)
+                child = self.Node(next_x, next_y, parent.cost + move_cost, parent_id, parent)
                 child_id = self.calculate_grid_index(child)
 
                 if (child_id in open_set_store) and (search_type == 'graph'):
@@ -202,10 +211,12 @@ class SearchPlanner:
                 if not (self.min_x <= next_x <= self.max_x and self.min_y <= next_y <= self.max_y):
                     continue
 
-                if self.obstacle_map[next_y][next_x]:
+                cell_value = self.obstacle_map[next_y][next_x]
+                if cell_value == 1:
                     continue
 
-                child = self.Node(next_x, next_y, parent.cost + cost, parent_id, parent)
+                move_cost = self.get_cell_cost(next_x, next_y)
+                child = self.Node(next_x, next_y, parent.cost + move_cost, parent_id, parent)
                 child_id = self.calculate_grid_index(child)
 
                 if search_type == 'tree' and self.is_tree_looping(parent, child):
@@ -285,10 +296,12 @@ class SearchPlanner:
                 if not (0 <= next_x < self.x_width and 0 <= next_y < self.y_width):
                     continue
 
-                if self.obstacle_map[next_y][next_x]:
+                cell_value = self.obstacle_map[next_y][next_x]
+                if cell_value == 1:
                     continue
 
-                new_cost = current.cost + cost
+                move_cost = self.get_cell_cost(next_x, next_y)
+                new_cost = current.cost + move_cost
                 neighbour = self.Node(next_x, next_y, new_cost, current_id, current)
                 neighbour_id = self.calculate_grid_index(neighbour)
 
