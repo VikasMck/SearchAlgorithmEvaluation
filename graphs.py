@@ -160,6 +160,7 @@ def algorithm_peak_storage_plot(results_data):
         axes[column].set_xlabel('Search Algorithm')
         axes[column].set_ylabel('Peak Memory Usage (Bytes)')
         axes[column].tick_params(axis='x', rotation=45, labelsize=10)
+        axes[column].ticklabel_format(style='plain', axis='y')
         plt.yticks(sorted(means.values))
 
     plt.tight_layout()
@@ -173,11 +174,13 @@ def path_expanded_memory_usage_plot(results_data):
     for column, search_type in enumerate(['graph', 'tree']):
         data = results_data[results_data['Search_Type_Name'] == search_type]
 
-        sns.scatterplot(x='Num_Nodes_Expanded', y='Peak_Memory_Usage', data=data, hue='Algorithm_And_Search_Name',
+        data['Peak_Memory_Usage_KB'] = data['Peak_Memory_Usage'] / 1024
+        sns.scatterplot(x='Num_Nodes_Expanded', y='Peak_Memory_Usage_KB', data=data, hue='Algorithm_And_Search_Name',
                         ax=axes[column])
         axes[column].set_xlabel('Num Nodes Expanded')
         axes[column].set_title(f'{search_type.upper()}')
-        axes[column].set_ylabel('Peak Memory Usage (Bytes)')
+        axes[column].set_ylabel('Peak Memory Usage (kB)')
+        axes[column].ticklabel_format(style='plain', axis='y')
 
     plt.tight_layout()
     plt.show()
