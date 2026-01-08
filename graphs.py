@@ -101,8 +101,10 @@ def start_to_goal_performance_plot(results_data):
 
     # creating A -> B column by mapping regions text to 1-5 and concat
     results_df_copy = results_data.copy()
-    results_df_copy['Start_Region'] = results_df_copy['Start_Region'].map(regions_text).fillna(results_df_copy['Start_Region'])
-    results_df_copy['Goal_Region'] = results_df_copy['Goal_Region'].map(regions_text).fillna(results_df_copy['Goal_Region'])
+    results_df_copy['Start_Region'] = results_df_copy['Start_Region'].map(regions_text).fillna(
+        results_df_copy['Start_Region'])
+    results_df_copy['Goal_Region'] = results_df_copy['Goal_Region'].map(regions_text).fillna(
+        results_df_copy['Goal_Region'])
     results_df_copy['Route'] = results_df_copy['Start_Region'] + ' -> ' + results_df_copy['Goal_Region']
 
     fig, axes = plt.subplots(1, 2, figsize=(25, 8))
@@ -131,7 +133,8 @@ def node_analysis_plot(results_data):
         data = results_data[results_data['Search_Type_Name'] == search_type]
         for algorithm in data['Search_Algorithm_Name'].unique():
             algorithm_data = data[data['Search_Algorithm_Name'] == algorithm]
-            axes[column].scatter(algorithm_data['Num_Nodes_Expanded'], algorithm_data['Time'], label=algorithm, alpha=0.6, s=20)
+            axes[column].scatter(algorithm_data['Num_Nodes_Expanded'], algorithm_data['Time'], label=algorithm,
+                                 alpha=0.6, s=20)
         axes[column].set_title(search_type.upper())
         axes[column].set_xlabel('Nodes Expanded')
         axes[column].set_ylabel('Time (seconds)')
@@ -139,6 +142,7 @@ def node_analysis_plot(results_data):
 
     plt.tight_layout()
     plt.show()
+
 
 def algorithm_peak_storage_plot(results_data):
     fig, axes = plt.subplots(1, 2, figsize=(15, 10))
@@ -149,7 +153,8 @@ def algorithm_peak_storage_plot(results_data):
 
         means = data.groupby('Search_Algorithm_Name')['Peak_Memory_Usage'].mean()
 
-        sns.barplot(x='Search_Algorithm_Name', y='Peak_Memory_Usage', data=data, ax=axes[column],estimator='mean', color='blue' if search_type == 'graph' else 'green')
+        sns.barplot(x='Search_Algorithm_Name', y='Peak_Memory_Usage', data=data, ax=axes[column], estimator='mean',
+                    color='blue' if search_type == 'graph' else 'green')
         axes[column].set_title(f'{search_type.upper()}: Size')
 
         axes[column].set_xlabel('Search Algorithm')
@@ -157,32 +162,35 @@ def algorithm_peak_storage_plot(results_data):
         axes[column].tick_params(axis='x', rotation=45, labelsize=10)
         plt.yticks(sorted(means.values))
 
-
     plt.tight_layout()
     plt.show()
 
-def path_expanded_Memory_Usage_plot(results_data):
+
+def path_expanded_memory_usage_plot(results_data):
     fig, axes = plt.subplots(1, 2, figsize=(15, 10))
     fig.suptitle('Path Expanded Memory Usage Per Algorithm (Graph v Tree)', fontsize=15, fontweight='bold')
 
     for column, search_type in enumerate(['graph', 'tree']):
         data = results_data[results_data['Search_Type_Name'] == search_type]
 
-        sns.scatterplot(x = 'Num_Nodes_Expanded', y= 'Peak_Memory_Usage', data=data ,hue='Algorithm_And_Search_Name',ax=axes[column])
+        sns.scatterplot(x='Num_Nodes_Expanded', y='Peak_Memory_Usage', data=data, hue='Algorithm_And_Search_Name',
+                        ax=axes[column])
         axes[column].set_xlabel('Num Nodes Expanded')
+        axes[column].set_title(f'{search_type.upper()}')
         axes[column].set_ylabel('Peak Memory Usage (Bytes)')
 
     plt.tight_layout()
     plt.show()
 
 
-
 if __name__ == '__main__':
     results_df = pd.read_csv('results_df.csv')
     graphs_functions = [algorithm_average_time_plot, maze_size_affect_plot, maze_density_affect_plot,
-                        algorithms_per_density_size_plot, start_to_goal_performance_plot, node_analysis_plot, algorithm_peak_storage_plot, path_expanded_Memory_Usage_plot]
+                        algorithms_per_density_size_plot, start_to_goal_performance_plot, node_analysis_plot,
+                        algorithm_peak_storage_plot, path_expanded_memory_usage_plot]
     graphs_names = ['Average Time Per Algorithm (Line)', 'How Size Effects (Line)', 'How Density Effects (Line)',
-                    'Density and Size (Bar)', 'Start to Goal Combinations (Bar)', 'Nodes per Time (Scatter)', 'Peak Memory Usage (Bar)','Path Expanded To Memory Usage (Scatter)']
+                    'Density and Size (Bar)', 'Start to Goal Combinations (Bar)', 'Nodes per Time (Scatter)',
+                    'Peak Memory Usage (Bar)', 'Path Expanded To Memory Usage (Scatter)']
 
     while True:
         for i, name in enumerate(graphs_names, 1):
