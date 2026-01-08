@@ -139,7 +139,8 @@ class AnimatedSearch:
                 plt.plot(path_x, path_y, c='red', linewidth=4)
                 plt.pause(pause_time)
 
-        print(f"Peak memory usage: {memory}")
+        print(f"Current memory usage: {memory[0] / 1024:.3f} kB")
+        print(f"Peak memory usage: {memory[1] / 1024:.3f} kB")
 
         return path, memory, nodes_expanded
 
