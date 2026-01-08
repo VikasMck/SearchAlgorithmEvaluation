@@ -107,7 +107,7 @@ def start_to_goal_performance_plot(results_data):
         results_df_copy['Goal_Region'])
     results_df_copy['Route'] = results_df_copy['Start_Region'] + ' -> ' + results_df_copy['Goal_Region']
 
-    fig, axes = plt.subplots(1, 2, figsize=(25, 8))
+    fig, axes = plt.subplots(2, 1, figsize=(25, 10))
     fig.suptitle('Performance Per Route (Graph v Tree)', fontsize=15, fontweight='bold')
 
     for column, search_type in enumerate(['graph', 'tree']):
