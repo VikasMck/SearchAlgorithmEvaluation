@@ -172,7 +172,7 @@ def path_expanded_memory_usage_plot(results_data):
     fig.suptitle('Path Expanded Memory Usage Per Algorithm (Graph v Tree)', fontsize=15, fontweight='bold')
 
     for column, search_type in enumerate(['graph', 'tree']):
-        data = results_data[results_data['Search_Type_Name'] == search_type]
+        data = results_data[results_data['Search_Type_Name'] == search_type].copy()
 
         data['Peak_Memory_Usage_KB'] = data['Peak_Memory_Usage'] / 1024
         sns.scatterplot(x='Num_Nodes_Expanded', y='Peak_Memory_Usage_KB', data=data, hue='Algorithm_And_Search_Name',

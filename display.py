@@ -5,13 +5,16 @@ import time
 import matplotlib.pyplot as plt
 import matplotlib
 import tracemalloc
-import seaborn as sns
 from algorithms import SearchPlanner
 
 from maze_generate import maze_generate
 
 # Simplest way to run on Macs
 matplotlib.use('MacOSX')
+
+# for windows
+# matplotlib.use('TkAgg')
+
 
 show_animation = True
 pause_time = 0.05
@@ -263,31 +266,7 @@ def graph_results():
     regions = list(range(1, 6))
     mazes = create_maze_list(sizes, obstacle_density, water_density, regions)
 
-    # titles = {1: 'Easy', 2: 'Medium', 3: 'Hard'}
-    # for i, maze in enumerate(mazes):
-    #     i += 1
-    #     maze.save_maze(filename=f'{titles.get(i)}_Maze.png', title=f'{titles.get(i)} Maze')
-
     results_df = results_iterator(mazes)
 
     results_df.to_csv('results_df.csv', index=False)
 
-    # print(results_df['Algorithm_Name'])
-    # print(results_df.describe())
-
-    # line_memory = sns.lineplot(y='Peak_Memory_Usage', x='Attempts', data=results_df, hue='Algorithm_And_Search_Name',
-    #                            marker='o')
-    # # plt.ylim(results_df['Time'].min(), results_df['Time'].max())
-    # plt.legend(title='Search Algorithms')
-    # plt.title('Memory Usage Per Attempt Of Each Search Algorithm')
-    # plt.ylabel("Peak Memory Usage (Bytes)")
-    # plt.xticks(results_df['Attempts'].unique())
-    # plt.show()
-    #
-    # bat_path = sns.barplot(y='Path', x='Search_Algorithm_Name', data=results_df, hue='Search_Type_Name')
-    # plt.legend(title='Search Types')
-    # plt.title('Comparing Path Lengths Across Search Algorithms')
-    # plt.ylabel("Path Length")
-    # plt.xlabel("Search Algorithms")
-    # plt.yticks(results_df['Path'].unique())
-    # plt.show()
