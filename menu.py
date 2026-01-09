@@ -5,7 +5,7 @@ def print_main_menu():
     print("2. DFS")
     print("3. UCS")
     print("4. A*")
-    print("5. Run Analysis")
+    print("5. Run Analysis (Runs 1440 Mazes)")
     print("6. Exit")
 
     while True:
